@@ -121,7 +121,8 @@ img {
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
     font-family: 'Jost', sans-serif;
     font-weight: 400;
     line-height: var(--line-height-small);
@@ -156,6 +157,11 @@ h2::after {
 
 h3 {
     font-size: var(--font-size-medium-1);
+    margin-bottom: var(--gutter-small);
+}
+
+h4 {
+    font-size: var(--font-size-medium);
     margin-bottom: var(--gutter-small);
 }
 
@@ -442,24 +448,30 @@ body:not(.user-is-tabbing) a:focus {
 
 .work__box {
     display: flex;
-    align-items: center;
+    align-items: start;
+    gap: 10%;
 }
 
 @media(max-width: 900px) {
     .work__box {
         align-items: initial;
-        flex-direction: column-reverse;
+        flex-direction: column;
     }
 }
 
 .work__box:not(:last-child) {
-    margin-bottom: 25rem;
+    margin-bottom: 15rem;
 }
 
 @media(max-width: 500px) {
     .work__box:not(:last-child) {
-        margin-bottom: 20rem;
+        margin-bottom: 10rem;
     }
+}
+
+.work__intro {
+    margin-bottom: var(--gutter-medium);
+    font-style: italic;
 }
 
 .work__links {
@@ -468,7 +480,9 @@ body:not(.user-is-tabbing) a:focus {
 }
 
 .work__text {
-    flex: 0 0 30%;
+    flex: 0 0 50%;
+    margin-bottom: var(--gutter-normal);
+    flex-basis: 60%;
 }
 
 .work__list {
@@ -486,17 +500,6 @@ body:not(.user-is-tabbing) a:focus {
 
 .work__code:hover {
     transform: scale(1.2);
-}
-
-.work__image-box {
-    margin-bottom: var(--gutter-normal);
-}
-
-@media(min-width: 901px) {
-    .work__image-box {
-        flex: 1;
-        margin: 0 0 0 10rem;
-    }
 }
 
 @media(max-width: 900px) {
