@@ -24,12 +24,12 @@
 
   <!-- Put your site title here -->
   <title>
-    Adrien MAISAK - Introduction
+    Adrien MAISAK - Application developer
   </title>
 
-  <meta name="description" content="Newly transitioned developer based in Montpellier, France.">
+  <meta name="description" content="Application developer based in Toulouse, backend at heart. Open to full-time roles.">
   <!-- Add some coding keywords below, Ex: (React, CSS etc) -->
-  <meta name="keywords" content="python backend django application developer" />
+  <meta name="keywords" content="application developer, backend, Python, FastAPI, TypeScript, Node.js, Fastify, PostgreSQL, Redis, Next.js, React, AI coding agents, Toulouse" />
   <link rel="stylesheet" href="index.css" />
 </head>
 
@@ -58,7 +58,7 @@
           <span>Adrien MAISAK</span>
         </h1>
         <!-- Put a small paragraph about yourself -->
-        <p>A new developer eager to use my skills and continue to learn.</p>
+        <p>Application developer, backend&nbsp;at&nbsp;heart.<br>Open to full-time roles.</p>
         <a href="#contact" class="btn btn--pink">Get in touch</a>
       </div>
     </div>
@@ -75,10 +75,19 @@
           <div class="about__text">
             <!-- Replace the below paragraph with info about yourself -->
             <p>
-              Having recently transitioned into development through a professional, 
-              project-oriented training course, I am now focused on Python and backend 
-              technologies. I am excited to apply these skills as I embark on my new 
-              career path as a developer.
+              I'm an application developer based in Toulouse. Over the past year, I've been freelancing,
+              building full-stack web applications with a soft spot for the backend. Before that, I spent
+              seven years in product data and IT roles, which taught me to care about clean data and tools
+              that actually work for the people using them.
+            </p>
+            <p>
+              Curiosity got me testing AI early, but the hype outran the results, so I stayed a skeptic
+              who kept trying each new release. Once it became genuinely capable, I went all in. Today I
+              work hand in hand with AI coding agents, deliberately and responsibly: AI is a tool I steer,
+              not an autopilot.
+            </p>
+            <p>
+              I'm now looking for a full-time role where I can keep growing alongside an experienced team.
             </p>
             <!-- Provide a link to your resume -->
             <a href="./CV_AMK_EN.pdf" class="btn">My Resume</a>
@@ -98,16 +107,88 @@
     <section class="work" id="work">
       <div class="row">
         <h2>My work</h2>
-        <p class="work__intro">
-          Below are some of the main coding projects I completed during my training.
-        </p>
         <div class="work__boxes">
 
           <!-- Each div with the work__box class is a project. -->
 
           <div class="work__box">
             <div class="work__text">
-              <h3>OC Lettings</h3>
+              <h3>Checkout Surge</h3>
+              <p>
+                A simulated flash sale: 10,000 virtual buyers rush for 500 items at the same moment.
+                My interest was in designing the system behind it.
+              </p>
+              <ul class="work__list">
+                <li>Never sell an item that doesn't exist, even with duplicate clicks</li>
+                <li>Keep a deliberately slow back office from being flooded</li>
+                <li>Follow each run live on a real-time dashboard</li>
+                <li>Compare design choices side by side with measured results</li>
+              </ul>
+              <p>
+                Launch a real load test and watch it live. The demo sleeps when idle, so it takes a few seconds to wake up.
+              </p>
+
+              <div class="work__links">
+                <a href="https://checkout-surge-gate.fly.dev/" target="_blank" class="link__text">
+                  Try it
+                </a>
+                <a href="https://github.com/DayriseA/checkout-surge" title="View Source Code" target="_blank">
+                  <img src="./images/github.svg" class="work__code" alt="GitHub">
+                </a>
+              </div>
+            </div>
+            <div class="work__techs">
+              <h4>Stacks used</h4>
+              <ul class="work__list">
+                <li>TypeScript / Node.js / Fastify</li>
+                <li>Redis / BullMQ</li>
+                <li>PostgreSQL</li>
+                <li>Next.js / React</li>
+                <li>k6</li>
+                <li>Docker / Fly.io</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="work__box">
+            <div class="work__text">
+              <h3>AI Social Media Coach</h3>
+              <p>
+                The picture is: Business owners connect their Facebook and Instagram accounts, describe their business 
+                and get AI coaching based on their own data. 
+              </p>
+              <ul class="work__list">
+                <li>Publish, schedule and analyze posts on both platforms</li>
+                <li>Turn each user's data into a coaching plan with concrete steps</li>
+                <li>Keep users motivated with quests, streaks and rewards</li>
+                <li>Manage several businesses and team members with distinct roles</li>
+              </ul>
+
+              <div class="work__links">
+                <span class="work__private" tabindex="0">
+                  <img src="./images/github.svg" class="work__code" alt="Source code not public">
+                  <span class="work__tooltip" role="tooltip">
+                    Freelance project: the client owns the code.
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="work__techs">
+              <h4>Stacks used</h4>
+              <ul class="work__list">
+                <li>Python / FastAPI</li>
+                <li>PostgreSQL / SQLAlchemy</li>
+                <li>Next.js / React / TypeScript</li>
+                <li>OpenAI API</li>
+                <li>Meta Graph API</li>
+                <li>Docker / Render / Vercel</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="work__box">
+            <div class="work__text">
+              <h3>OC Lettings <span class="work__tag">Training project</span></h3>
               <p>
                 This project was about starting from an existing project in poor condition and improve it:
               </p>
@@ -144,7 +225,7 @@
 
           <div class="work__box">
             <div class="work__text">
-              <h3>EpicEvents CRM</h3>
+              <h3>EpicEvents CRM <span class="work__tag">Training project</span></h3>
               <p>
                 A CLI app for a simple CRM. Implement a secure database with Python and SQL. 
                 Provides functionality for managing employees, clients, contracts and events of an organization.
@@ -169,7 +250,7 @@
 
           <div class="work__box">
             <div class="work__text">
-              <h3>Gudlift registration</h3>
+              <h3>Gudlift registration <span class="work__tag">Training project</span></h3>
               <p>
                 This project goal was to contribute to an existing project by adding differents tests,
                 handling errors and fixing issues.
@@ -194,7 +275,7 @@
 
           <div class="work__box">
             <div class="work__text">
-              <h3>SoftDesk-API</h3>
+              <h3>SoftDesk-API <span class="work__tag">Training project</span></h3>
               <p>
                 In this project, I created a RESTful API using Django REST. It also was a nice 
                 introduction to security and data protection standards, such as OWASP and GDPR standards, as well as 

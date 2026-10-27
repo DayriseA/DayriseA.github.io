@@ -474,6 +474,22 @@ body:not(.user-is-tabbing) a:focus {
     font-style: italic;
 }
 
+/* Small tag next to a project title, for projects done during training */
+
+.work__tag {
+    display: inline-block;
+    margin-left: 1rem;
+    padding: .1rem .6rem;
+    font-family: var(--font-stack);
+    font-size: 1.1rem;
+    line-height: 1.4;
+    letter-spacing: .04em;
+    vertical-align: middle;
+    white-space: nowrap;
+    color: rgba(240, 233, 242, .5);
+    background: rgba(240, 233, 242, .07);
+}
+
 .work__links {
     display: flex;
     align-items: center;
@@ -505,6 +521,86 @@ body:not(.user-is-tabbing) a:focus {
 @media(max-width: 900px) {
     .work__code {
         height: 4rem;
+    }
+}
+
+/* GitHub icon struck through, for projects whose source code is private */
+
+.work__private {
+    position: relative;
+    display: block;
+    margin-left: var(--gutter-normal);
+    cursor: help;
+}
+
+.work__private:focus {
+    outline: none;
+}
+
+.work__private:focus-visible {
+    outline: 1px solid var(--pink);
+    outline-offset: .4rem;
+}
+
+.work__private .work__code {
+    margin-left: 0;
+    opacity: .35;
+}
+
+.work__private .work__code:hover {
+    transform: none;
+}
+
+.work__private::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -15%;
+    width: 130%;
+    height: .3rem;
+    background: var(--pink);
+    box-shadow: 0 0 0 .2rem var(--black);
+    transform: rotate(45deg);
+}
+
+.work__tooltip {
+    position: absolute;
+    bottom: calc(100% + 1.2rem);
+    left: 0;
+    z-index: 10;
+    width: max-content;
+    max-width: 28rem;
+    padding: 1rem 1.4rem;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    color: var(--white);
+    background: #222;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(.5rem);
+    transition: all .2s;
+}
+
+.work__tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 1.5rem;
+    border: .6rem solid transparent;
+    border-top-color: #222;
+    transform: translateX(-50%);
+}
+
+.work__private:hover .work__tooltip,
+.work__private:focus .work__tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+@media(max-width: 900px) {
+    .work__tooltip::after {
+        left: 2rem;
     }
 }
 
