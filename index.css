@@ -38,6 +38,7 @@
     --pink: #ff3258;
     --white: #f0e9f2;
     --white-1: #e5e5e6da;
+    --white-2: rgba(240, 233, 242, .6);
 
 
     --container-max-width: 1180px;
@@ -50,6 +51,9 @@
     --gutter-normal: 3rem;
     --gutter-small-1: 2.5rem;
     --gutter-small: 2rem;
+
+    /* Height of the nav's language row at <= 500px: one line of its text plus .3rem above and below */
+    --nav-lang-row-height: calc(var(--font-size-small) * var(--line-height-normal) + .6rem);
 
     --border-light: 1px solid rgb(36, 35, 35);
 }
@@ -113,6 +117,20 @@ section {
 img {
     object-fit: contain;
     max-width: 100%;
+}
+
+/* Hidden on screen, still read by assistive technologies */
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* --------------------------------------- */
@@ -349,11 +367,11 @@ body:not(.user-is-tabbing) a:focus {
 
 .nav__items {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: baseline;
+    column-gap: var(--gutter-medium);
     list-style: none;
-}
-
-.nav__item:not(:last-child) {
-    margin-right: var(--gutter-medium);
 }
 
 @media(max-width: 500px) {
@@ -363,8 +381,8 @@ body:not(.user-is-tabbing) a:focus {
 }
 
 @media(max-width: 400px) {
-    .nav__item:not(:last-child) {
-        margin-right: var(--gutter-normal);
+    .nav__items {
+        column-gap: var(--gutter-normal);
     }
 }
 
@@ -405,6 +423,96 @@ body:not(.user-is-tabbing) a:focus {
     background: var(--pink);
 }
 
+/* ----- Language switcher ----- */
+
+.nav__item--lang {
+    display: flex;
+    align-items: baseline;
+}
+
+/* Short vertical rule setting the switcher apart from the section links */
+
+.nav__item--lang::before {
+    content: '';
+    width: 1px;
+    height: 2.5rem;
+    align-self: center;
+    margin-right: var(--gutter-normal);
+    background: var(--white-2);
+}
+
+.nav__lang {
+    display: flex;
+    align-items: baseline;
+    font-size: var(--font-size-small);
+    letter-spacing: .05em;
+    color: var(--white-2);
+}
+
+.nav__lang-icon {
+    align-self: center;
+    margin-right: 1rem;
+}
+
+.nav__lang-sep {
+    margin: 0 .8rem;
+}
+
+/* Extra bottom padding lines the underline up with the section links' one despite the smaller font */
+
+.nav__lang-link {
+    padding-bottom: 1.15rem;
+}
+
+.nav__lang-link[aria-current="page"] {
+    color: var(--white);
+}
+
+.nav__lang-link[aria-current="page"]::after {
+    right: 0;
+    height: 2px;
+    background: var(--pink);
+}
+
+/* Not enough room for everything on one row: the switcher gets its own centered row */
+
+@media(max-width: 500px) {
+    .nav__items {
+        justify-content: center;
+    }
+
+    .nav__item--lang {
+        flex-basis: 100%;
+        justify-content: center;
+    }
+
+    .nav__item--lang::before {
+        display: none;
+    }
+
+    /* Vertical padding fills the row around one line of text, so the row is exactly --nav-lang-row-height */
+
+    .nav__lang-link {
+        padding: calc((var(--nav-lang-row-height) - 1lh) / 2) 0;
+    }
+}
+
+@media(forced-colors: active) {
+    .nav__item--lang::before {
+        background: CanvasText;
+    }
+
+    /* The header photo stays behind the drawn underline, so underline the text itself, on its backplate */
+
+    .nav__lang-link[aria-current="page"] {
+        text-decoration: underline;
+    }
+
+    .nav__lang-link[aria-current="page"]::after {
+        display: none;
+    }
+}
+
 /* --------------------------------------- */
 /* ----- Header ----- */
 /* --------------------------------------- */
@@ -435,6 +543,13 @@ body:not(.user-is-tabbing) a:focus {
 @media(max-width: 500px) {
     .header {
         text-align: center;
+    }
+
+    /* The language switcher sits on its own nav row here, and the header text is centered absolutely,
+       ignoring the nav: push it down by that row's height to keep the same space below the nav */
+
+    .header__text {
+        top: calc(50% + var(--nav-lang-row-height));
     }
 
     .header__text p {
