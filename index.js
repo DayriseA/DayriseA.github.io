@@ -18,15 +18,13 @@
     return { el, cx: box.width / 2, cy: box.height / 2 };
   });
   const dial = document.querySelector('.dial');
-  const headingOut = document.querySelector('[data-heading]');
-  const nextOut = document.querySelector('[data-next]');
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const STEP = 5; // px between samples along the route
   const TURN = 30; // radius of a rounded turn
 
   let samples = []; // [{ x, y }] every STEP px of the flyable route
-  let named = []; // waypoints with a name: { el, s, name }
+  let marks = []; // visible waypoints: { el, s }
   let total = 0;
   let mainTop = 0;
 
@@ -35,8 +33,6 @@
   let angle = 135; // needle, degrees
   let speed = 0;
   let bearing = 205; // heading of the leg under the craft
-  let shownHeading = '';
-  let shownNext = '';
   let dialVisible = true;
   let drawn = -1; // distance last painted
   let frame = 0;
@@ -59,7 +55,6 @@
           x: r.left - box.left + r.width / 2,
           y: r.top - box.top + r.height / 2,
           kind: el.dataset.pt,
-          name: el.dataset.name,
         };
       });
     if (pts.length < 3) return;
@@ -95,10 +90,9 @@
     for (let l = 0; l <= total; l += STEP) samples.push(flown.getPointAtLength(l));
     samples.push(flown.getPointAtLength(total));
 
-    named = pts
-      .filter((p) => p.name)
-      .map((p) => ({ el: p.el, name: p.name, s: distanceAtY(p.y) }));
-    if (dest) named.push({ el: dest.el, name: dest.name, s: Infinity });
+    marks = pts
+      .filter((p) => p.el.classList.contains('wp'))
+      .map((p) => ({ el: p.el, s: distanceAtY(p.y) }));
 
     ready = true;
     drawn = -1;
@@ -156,21 +150,10 @@
 
     if (p.dx || p.dy) bearing = (Math.atan2(p.dx, -p.dy) * 180) / Math.PI;
 
-    let next = named[named.length - 1];
-    for (const w of named) {
+    for (const w of marks) {
       const passed = w.s <= s + 2;
       if (w.el.classList.contains('is-passed') !== passed) w.el.classList.toggle('is-passed', passed);
     }
-    for (const w of named) {
-      if (w.s > s + 2) {
-        next = w;
-        break;
-      }
-    }
-
-    const heading = `${String(Math.round((bearing + 360) % 360) % 360).padStart(3, '0')}°`;
-    if (headingOut && heading !== shownHeading) headingOut.textContent = shownHeading = heading;
-    if (nextOut && next && next.name !== shownNext) nextOut.textContent = shownNext = next.name;
   }
 
   function turnNeedles() {
