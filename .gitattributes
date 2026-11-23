@@ -1,0 +1,6 @@
+# Vendored Askfolio client files: copied byte for byte from the Askfolio build.
+# Never let git normalise their line ends, so they stay identical to the build.
+assets/askfolio/askfolio-client.js -text
+assets/askfolio/askfolio-client.js.map -text
+assets/askfolio/askfolio-markdown.js -text
+assets/askfolio/askfolio-markdown.js.map -text
