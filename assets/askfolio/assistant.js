@@ -2,9 +2,17 @@
 // docs/14-headless-client.md; this script started from its reference example).
 // A launcher fixed at the bottom of the viewport opens a <dialog>: a floating, non-modal panel on
 // wide screens, so the page stays readable and scrollable, and a full-screen modal sheet on narrow
-// ones. It runs as a module: if this file or the client fails to load, nothing runs, the launcher
-// stays hidden and the rest of the page is untouched (rule 1).
-import { AI_DISCLOSURE, AskfolioClient, messageLength } from "./askfolio-client.js";
+// ones. The panel has two views, switched by tabs in its header: the conversation, and the
+// job-offer analysis, where a recruiter pastes an offer or uploads it as a PDF and gets a report.
+// It runs as a module: if this file or the client fails to load, nothing runs, the launcher stays
+// hidden and the rest of the page is untouched (rule 1).
+import {
+  AI_DISCLOSURE,
+  AskfolioClient,
+  messageLength,
+  OFFER_DISCLAIMER,
+  offerTextLength,
+} from "./askfolio-client.js";
 import { renderMarkdown } from "./askfolio-markdown.js";
 
 // The service: the local one on a local host, production everywhere else.
@@ -14,6 +22,8 @@ const SERVICE_URL = LOCAL ? "http://localhost:8787" : "https://askfolio-dayrise.
 const LOG_KEY = "site:askfolio-log"; // the page's own copy of the messages it shows
 const lang = document.documentElement.lang.startsWith("fr") ? "fr" : "en";
 const number = (value) => value.toLocaleString(lang);
+const kilobytes = (bytes) => number(Math.max(1, Math.round(bytes / 1024)));
+const megabytes = (bytes) => number(Math.round(bytes / 104_857.6) / 10);
 
 // The floating panel needs room around it; below this, the panel is a full-screen sheet.
 const WIDE = window.matchMedia("(min-width: 700px) and (min-height: 560px)");
@@ -42,6 +52,32 @@ const TEXT = {
     budget: "The assistant has reached its daily limit and will be back tomorrow.",
     unavailable: "The assistant is currently unavailable.",
     tooLong: (max) => `Your message is too long (${number(max)} characters max).`,
+    readingOffer: "Reading the job offer…",
+    writingReport: "Writing the report…",
+    checkingReport: "Checking the report before showing it…",
+    offerStopped: "Analysis stopped.",
+    offerInterrupted: "The analysis was interrupted.",
+    offerLimited: "You have reached the usage limit for now. Please come back later.",
+    offerClosing: "The previous request is still closing. Please try again in a few seconds.",
+    offerType: "Only PDF files are accepted.",
+    offerSize: (bytes) => `The file is too large (${megabytes(bytes)} MB max).`,
+    offerUnreadable: "The text of this PDF could not be read. Please paste the offer instead.",
+    offerShort: "This text is too short to be a job offer.",
+    offerLong: (max) => `This text is too long (${number(max)} characters max).`,
+    offerHint: (bytes, pages) => `Up to ${megabytes(bytes)} MB and ${number(pages)} pages.`,
+    fileSize: (bytes) => (bytes < 1_048_576 ? `${kilobytes(bytes)} KB` : `${megabytes(bytes)} MB`),
+    summary: "Summary",
+    requirements: "Requirements",
+    importance: { must: "Required", nice: "Nice to have" },
+    match: {
+      strong: "Strong match",
+      partial: "Partial match",
+      none: "No evidence found",
+      unknown: "Cannot be assessed",
+    },
+    gaps: "Gaps",
+    questions: "Questions to ask Adrien",
+    truncated: "The offer was long: only its first part was analyzed.",
   },
   fr: {
     newTopic: (name) => `Nouvelle conversation. Sujet : ${name}.`,
@@ -64,15 +100,52 @@ const TEXT = {
     budget: "L’assistant a atteint sa limite quotidienne et sera de retour demain.",
     unavailable: "L’assistant est momentanément indisponible.",
     tooLong: (max) => `Votre message est trop long (${number(max)} caractères maximum).`,
+    readingOffer: "Lecture de l’offre d’emploi…",
+    writingReport: "Rédaction du rapport…",
+    checkingReport: "Vérification du rapport avant affichage…",
+    offerStopped: "Analyse arrêtée.",
+    offerInterrupted: "L’analyse a été interrompue.",
+    offerLimited: "Vous avez atteint la limite d’utilisation pour le moment. Revenez plus tard.",
+    offerClosing: "La requête précédente se termine. Réessayez dans quelques secondes.",
+    offerType: "Seuls les fichiers PDF sont acceptés.",
+    offerSize: (bytes) => `Le fichier est trop volumineux (${megabytes(bytes)} Mo maximum).`,
+    offerUnreadable: "Le texte de ce PDF n’a pas pu être lu. Collez plutôt le texte de l’offre.",
+    offerShort: "Ce texte est trop court pour être une offre d’emploi.",
+    offerLong: (max) => `Ce texte est trop long (${number(max)} caractères maximum).`,
+    offerHint: (bytes, pages) => `Jusqu’à ${megabytes(bytes)} Mo et ${number(pages)} pages.`,
+    fileSize: (bytes) => (bytes < 1_048_576 ? `${kilobytes(bytes)} Ko` : `${megabytes(bytes)} Mo`),
+    summary: "Résumé",
+    requirements: "Exigences du poste",
+    importance: { must: "Requises", nice: "Appréciées" },
+    match: {
+      strong: "Correspondance forte",
+      partial: "Correspondance partielle",
+      none: "Aucun élément trouvé",
+      unknown: "Impossible à évaluer",
+    },
+    gaps: "Écarts",
+    questions: "Questions à poser à Adrien",
+    truncated: "L’offre était longue : seule sa première partie a été analysée.",
   },
 }[lang];
+
+// The words of a job-offer turn, where they differ from a message's.
+const OFFER_TEXT = {
+  ...TEXT,
+  writing: TEXT.writingReport,
+  checking: TEXT.checkingReport,
+  stopped: TEXT.offerStopped,
+  interrupted: TEXT.offerInterrupted,
+  limited: TEXT.offerLimited,
+  closing: TEXT.offerClosing,
+};
 
 const $ = (id) => document.getElementById(id);
 const launcher = $("askfolio-launcher");
 const panel = $("askfolio");
 const heading = $("askfolio-title");
 const log = $("askfolio-log");
-const status = $("askfolio-status");
+const statuses = panel.querySelectorAll(".askfolio__status"); // one per view: a turn shows in both
 const live = $("askfolio-live");
 const notice = $("askfolio-notice");
 const challenge = $("askfolio-turnstile");
@@ -86,6 +159,24 @@ const topic = $("askfolio-topic"); // the topic control: a <select> whose option
 const empty = $("askfolio-empty");
 const starters = empty.querySelectorAll("[data-askfolio-starter]");
 const topicButtons = document.querySelectorAll("[data-askfolio-scope]"); // on the page
+const viewButtons = document.querySelectorAll("[data-askfolio-view]"); // on the page
+// The two views and their tabs, in the panel's header.
+const tabs = [...panel.querySelectorAll('[role="tab"]')];
+const views = { chat: $("askfolio-view-chat"), offer: $("askfolio-view-offer") };
+const tabMark = $("askfolio-tab-mark"); // a report arrived while the conversation was shown
+// The job-offer view: its form, then the report that replaces it once one arrives.
+const sheet = $("askfolio-sheet");
+const offerForm = $("askfolio-offer");
+const offerText = $("askfolio-offer-text");
+const offerPdf = $("askfolio-offer-pdf");
+const offerHint = $("askfolio-offer-hint");
+const chosen = $("askfolio-offer-chosen");
+const offerError = $("askfolio-offer-error");
+const report = $("askfolio-report");
+const analyse = $("askfolio-analyse");
+const offerStop = $("askfolio-offer-stop");
+const another = $("askfolio-another");
+const toReport = $("askfolio-to-report");
 
 const client = new AskfolioClient({
   serviceUrl: SERVICE_URL,
@@ -93,7 +184,7 @@ const client = new AskfolioClient({
 });
 
 let scope = client.conversation?.scope ?? "all"; // a page load continues the stored conversation
-let turning = false; // a message is in flight
+let turning = false; // a message or a job offer is in flight (one turn per client)
 let blocked = null; // { until } while a notice says why nothing can be sent
 let timer = 0;
 let checking = null; // a health check under way, after a notice
@@ -103,12 +194,16 @@ let reopen = null; // { focus } while the panel is reopened in the other mode
 let opener = null; // the topic button that opened the panel, which gets the focus back on close
 let pending = null; // a topic chosen on the page during a turn, applied when the turn ends
 let drafted = null; // the scope of the draft a topic button put in the field, while untouched
+let view = "chat"; // the view shown: "chat" or "offer"
+let showing = "form"; // what the job-offer view shows: "form" or "report"
+const scrolls = { chat: null, form: 0, report: 0 }; // where each view was last scrolled, shown
 
 // ─── Start: only when the service can answer (rule 1) ─────────────────────────────────────────
 
 const health = await client.health();
 if (health.status !== "unavailable") {
   $("askfolio-disclosure").textContent = AI_DISCLOSURE[lang];
+  $("askfolio-offer-disclaimer").textContent = OFFER_DISCLAIMER[lang];
   topic.value = scope;
   if (topic.value !== scope) {
     // A stored topic this page does not offer (any more): its conversation is not continued.
@@ -118,9 +213,9 @@ if (health.status !== "unavailable") {
   showStarter();
   showLog();
   if (health.status === "budget_exhausted") block(TEXT.budget, health.retryAt);
-  count();
+  limitsChanged();
   launcher.hidden = false;
-  for (const button of topicButtons) button.hidden = false;
+  for (const button of [...topicButtons, ...viewButtons]) button.hidden = false;
   followPage();
 }
 
@@ -207,15 +302,17 @@ function showSources(item, files) {
   item.append(details);
 }
 
-function progressText({ stage, tool, path }) {
-  if (stage === "writing") return TEXT.writing;
-  if (stage === "verifying") return TEXT.checking;
+/** The progress label; `words` holds a job offer's own words for writing and checking. */
+function progressText({ stage, tool, path }, words = TEXT) {
+  if (stage === "writing") return words.writing;
+  if (stage === "verifying") return words.checking;
   if (tool === "read_file" && path !== undefined) return TEXT.reading(path);
-  return TEXT.searching;
+  return tool === undefined ? TEXT.readingOffer : TEXT.searching; // no tool: an offer being read
 }
 
+/** The status line of both views, so that a turn shows in the view the visitor is looking at. */
 function setStatus(text, stage) {
-  status.textContent = text;
+  for (const line of statuses) line.textContent = text;
   if (stage !== undefined && !spoken.has(stage)) {
     spoken.add(stage);
     announce(text);
@@ -227,8 +324,16 @@ function setStatus(text, stage) {
 function refresh() {
   const tooLong = messageLength(question.value) > client.limits.maxMessageChars;
   send.disabled = blocked !== null || tooLong;
-  send.hidden = turning; // Stop takes Send's place during a turn
+  send.hidden = turning; // Stop takes Send's place during a turn, a message's or a job offer's
   stop.hidden = !turning;
+  // The job-offer view: Analyze under the form, "Analyze another offer" under a report; Stop takes
+  // the place of either during a turn. A report kept behind the form stays one click away.
+  analyse.disabled = blocked !== null;
+  analyse.hidden = turning || showing !== "form";
+  another.hidden = showing !== "report";
+  another.classList.toggle("is-aside", turning); // beside Stop
+  offerStop.hidden = !turning;
+  toReport.hidden = showing !== "form" || report.childNodes.length === 0;
   fresh.disabled = turning;
   topic.disabled = turning; // a turn keeps the scope it was sent in
   fresh.hidden = log.children.length === 0 && client.conversation === null;
@@ -254,7 +359,7 @@ function unblock() {
   notice.hidden = true;
   challenge.hidden = false; // in the layout again before the next session is needed
   refresh();
-  if (inNotice) question.focus();
+  if (inNotice) fieldOf(view).focus();
 }
 
 /** Blocks sending for `seconds`, then lets the visitor send again. */
@@ -287,43 +392,64 @@ function count() {
   refresh();
 }
 
-/** Every failure, as something the visitor sees. `say` writes a one-line message. */
-function fail(error, say) {
+/** The PDF limits under the file control: the service's defaults, then the session's. */
+function showLimits() {
+  const { jobOfferMaxPdfBytes, jobOfferMaxPdfPages } = client.limits;
+  offerHint.textContent = TEXT.offerHint(jobOfferMaxPdfBytes, jobOfferMaxPdfPages);
+}
+
+/** What a client-side check refused, in a line (`""`: nothing to say, an empty message). */
+function inputText({ code, limit }) {
+  if (code === "invalid_scope") return TEXT.badTopic;
+  if (code === "message_too_long") return TEXT.tooLong(limit);
+  if (code === "offer_text_too_short") return TEXT.offerShort;
+  if (code === "offer_text_too_long") return TEXT.offerLong(limit);
+  if (code === "offer_pdf_type") return TEXT.offerType;
+  if (code === "offer_pdf_too_large") return TEXT.offerSize(limit);
+  return "";
+}
+
+/**
+ * Every failure, as something the visitor sees. `say` writes a one-line message: a note in the
+ * log, or the inline message of the job-offer form; `words` are a job offer's own words.
+ */
+function fail(error, say, words = TEXT) {
   switch (error.kind) {
     case "aborted":
-      return say(TEXT.stopped);
+      return say(words.stopped);
     case "busy":
-      return; // Send is replaced by Stop during a turn
+      return; // Send and Analyze are replaced by Stop during a turn
     case "input":
-      if (error.code === "invalid_scope") return say(TEXT.badTopic);
-      return say(error.code === "message_too_long" ? TEXT.tooLong(error.limit) : "");
+      return say(inputText(error));
     case "turnstile":
-      return say(TEXT.humanCheck);
+      return say(words.humanCheck);
     case "unavailable":
       return error.status === "budget_exhausted"
-        ? block(TEXT.budget, Date.now() + 3_600_000)
-        : block(TEXT.unavailable, Date.now() + 60_000);
+        ? block(words.budget, Date.now() + 3_600_000)
+        : block(words.unavailable, Date.now() + 60_000);
     case "network":
-      return say(TEXT.network);
+      return say(words.network);
     case "dropped":
     case "stream":
-      return say(TEXT.interrupted);
+      return say(words.interrupted);
     case "http":
       if (error.code === "rate_limited") {
         // Three causes, one code: a short Retry-After is a stream still closing (after a stop).
         const seconds = error.retryAfter ?? 60;
-        return seconds <= 5 ? pause(TEXT.closing, seconds, false) : pause(TEXT.limited, seconds);
+        return seconds <= 5 ? pause(words.closing, seconds, false) : pause(words.limited, seconds);
       }
       if (error.code === "budget_exhausted") {
-        return block(TEXT.budget, Date.now() + (error.retryAfter ?? 3600) * 1000);
+        return block(words.budget, Date.now() + (error.retryAfter ?? 3600) * 1000);
       }
-      if (error.code === "service_unavailable") return block(TEXT.unavailable, Date.now() + 60_000);
+      if (error.code === "service_unavailable") {
+        return block(words.unavailable, Date.now() + 60_000);
+      }
       if (error.code === "conversation_limit") {
         client.newConversation();
-        return say(TEXT.full);
+        return say(words.full);
       }
-      if (error.code === "invalid_scope") return say(TEXT.badTopic);
-      return say(TEXT.generic);
+      if (error.code === "invalid_scope") return say(words.badTopic);
+      return say(words.generic);
   }
 }
 
@@ -341,15 +467,20 @@ function openPanel(focus) {
     panel.showModal(); // the browser makes the page inert, traps the focus and handles Escape
   }
   launcher.hidden = true;
-  if (!scrolled) {
-    scrolled = true;
-    log.scrollTop = log.scrollHeight; // the latest messages in view: a closed log cannot scroll
-  }
+  giveScroll();
+  scrollLog();
   if (focus !== undefined) focus?.focus();
-  // On a wide screen, straight to the question. On a narrow one, focusing the field would
+  // On a wide screen, straight to the view's field. On a narrow one, focusing the field would
   // raise the virtual keyboard over the panel at once: the heading takes the focus instead.
   else if (panel.matches(":modal")) heading.focus();
-  else question.focus();
+  else fieldOf(view).focus();
+}
+
+/** The latest messages in view, once, the first time the log can scroll (open and shown). */
+function scrollLog() {
+  if (scrolled || !panel.open || view !== "chat") return;
+  scrolled = true;
+  log.scrollTop = log.scrollHeight;
 }
 
 launcher.addEventListener("click", () => {
@@ -428,7 +559,78 @@ function followPage() {
   lift();
 }
 
-// ─── Topics: the control in the header, the buttons on the page, the suggested questions ──────
+// ─── The two views: tabs in the header, each view keeping its state while the other is shown ──
+
+/** Where the focus goes in a view: its field, or what stands for it. */
+function fieldOf(name) {
+  if (name === "chat") return question;
+  if (showing === "report") return report;
+  return offerText.disabled ? $("askfolio-offer-remove") : offerText; // a file replaces the text
+}
+
+/** Shows the view `next`, where it was scrolled. The focus stays where it is (on the tab). */
+function showView(next) {
+  if (next === view) return;
+  view = next;
+  for (const tab of tabs) {
+    const selected = tab.getAttribute("aria-controls") === views[next].id;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1; // roving tabindex: Tab enters the list on the selected tab
+  }
+  views.chat.hidden = next !== "chat";
+  views.offer.hidden = next !== "offer";
+  if (next === "offer") tabMark.hidden = true; // the report it pointed to is in view
+  giveScroll();
+  scrollLog();
+}
+
+// A hidden scroller reads as unscrolled, and not every browser gives its position back: each
+// view's position is kept while it is shown, and given back when it is shown again. The form and
+// the report share one scroller, the sheet.
+log.addEventListener("scroll", () => {
+  if (view === "chat" && panel.open) scrolls.chat = log.scrollTop;
+}, { passive: true });
+
+sheet.addEventListener("scroll", () => {
+  if (view === "offer" && panel.open) scrolls[showing] = sheet.scrollTop;
+}, { passive: true });
+
+function giveScroll() {
+  if (!panel.open) return; // given when the panel opens
+  if (view === "offer") sheet.scrollTop = scrolls[showing];
+  else if (scrolls.chat !== null) log.scrollTop = scrolls.chat;
+}
+
+// Tabs: a click selects; the arrow keys, Home and End move to a tab and select it (two views of a
+// panel already drawn: selecting on focus costs nothing).
+for (const tab of tabs) {
+  const name = tab.getAttribute("aria-controls") === views.offer.id ? "offer" : "chat";
+  tab.addEventListener("click", () => showView(name));
+}
+
+tabs[0].parentElement.addEventListener("keydown", (event) => {
+  const at = tabs.indexOf(document.activeElement);
+  if (at === -1 || event.altKey || event.ctrlKey || event.metaKey) return;
+  const to = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: tabs.length - 1 }[event.key];
+  if (to === undefined) return;
+  event.preventDefault();
+  const tab = tabs[(to + tabs.length) % tabs.length];
+  tab.focus();
+  tab.click();
+});
+
+// The page's entry point into the job-offer view (data-askfolio-view): opens the panel on that
+// view; the focus goes back to it when the panel is closed.
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("[data-askfolio-view]");
+  if (button === null || button === undefined || button.hidden) return;
+  opener = button;
+  showView(button.dataset.askfolioView === "offer" ? "offer" : "chat");
+  if (panel.open) fieldOf(view).focus();
+  else openPanel();
+});
+
+// ─── Topics: the control in the conversation view, the buttons on the page, the suggestions ───
 
 /** The topic's name, as the topic control's option writes it in the page's language. */
 function topicName(value) {
@@ -478,6 +680,7 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest?.("[data-askfolio-scope]");
   if (button === null || button === undefined || button.hidden) return;
   opener = button;
+  showView("chat");
   openPanel(null); // open first, so that a divider is announced from the panel
   setTopic(button.dataset.askfolioScope);
   const draft = button.dataset.askfolioDraft;
@@ -507,9 +710,14 @@ question.addEventListener("focus", async () => {
   await recheck(); // the health check a notice may need comes first
   if (client.session !== null || blocked !== null) return;
   const result = await client.connect(); // Turnstile runs while the visitor types
-  if (result.ok) count(); // the session's limits replace the service's defaults
+  if (result.ok) limitsChanged(); // the session's limits replace the service's defaults
   else if (result.error.kind !== "aborted" && !turning) fail(result.error, note);
 });
+
+function limitsChanged() {
+  count();
+  showLimits();
+}
 
 question.addEventListener("input", () => {
   drafted = null; // the visitor's own text now, whatever it says
@@ -523,7 +731,20 @@ question.addEventListener("keydown", (event) => {
   }
 });
 
+// Stop, in either view, ends the turn in flight, a message's or a job offer's.
 stop.addEventListener("click", () => client.stop());
+offerStop.addEventListener("click", () => client.stop());
+
+/**
+ * After a turn, the Stop button the focus was on is hidden again: the focus goes back to the
+ * button it replaced, or to the view's field when a notice disabled that button.
+ */
+function leaveStop(active) {
+  if (active === stop) (send.disabled ? question : send).focus();
+  else if (active === offerStop) {
+    (analyse.hidden || analyse.disabled ? fieldOf("offer") : analyse).focus();
+  }
+}
 
 fresh.addEventListener("click", () => {
   client.newConversation();
@@ -577,7 +798,7 @@ form.addEventListener("submit", async (event) => {
   });
   cancelAnimationFrame(frame); // no late frame: what streamed is drawn now, above any notice
   draw?.();
-  const fromStop = document.activeElement === stop;
+  const active = document.activeElement;
   turning = false;
   setStatus("");
   refresh();
@@ -598,7 +819,250 @@ form.addEventListener("submit", async (event) => {
     setTopic(pending); // a topic button pressed during the turn
     pending = null;
   }
-  // Stop is hidden again: once the result's state is drawn, the focus goes back to Send, or to
-  // the question when a notice disabled Send.
-  if (fromStop) (send.disabled ? question : send).focus();
+  if (!panel.contains(document.activeElement)) leaveStop(active); // once the result is drawn
 });
+
+// ─── A job offer ──────────────────────────────────────────────────────────────────────────────
+
+// Refusals the visitor must act on: the offer cannot work as it is; a file is dropped.
+const REFUSED_OFFER = {
+  payload_too_large: (pdf) =>
+    pdf
+      ? TEXT.offerSize(client.limits.jobOfferMaxPdfBytes)
+      : TEXT.offerLong(client.limits.jobOfferMaxTextChars),
+  unsupported_media_type: () => TEXT.offerType,
+  document_unreadable: () => TEXT.offerUnreadable,
+};
+
+/** The chosen file, under the file control; a file replaces the text, which waits disabled. */
+function showFile() {
+  const file = offerPdf.files[0];
+  chosen.hidden = file === undefined;
+  offerText.disabled = file !== undefined;
+  if (file === undefined) return;
+  $("askfolio-offer-file").textContent = `${file.name}, ${TEXT.fileSize(file.size)}`;
+}
+
+function dropFile() {
+  offerPdf.value = "";
+  showFile();
+}
+
+/**
+ * An offer message under the form, announced when it appears (`""` clears it), and scrolled into
+ * view: it lands under the fields, which may be scrolled out of the sheet's view.
+ */
+function offerProblem(text, reveal = true) {
+  offerError.textContent = text;
+  if (text === "") return;
+  announce(text);
+  if (reveal && !offerForm.hidden) offerError.scrollIntoView({ block: "nearest" });
+}
+
+/** Shows the form or the report in the job-offer view, each where it was scrolled. */
+function show(next) {
+  if (next === showing) return;
+  showing = next;
+  offerForm.hidden = next !== "form";
+  report.hidden = next !== "report";
+  if (view === "offer") giveScroll();
+  refresh();
+}
+
+offerPdf.addEventListener("change", async () => {
+  const file = offerPdf.files[0];
+  showFile();
+  const problem = file === undefined ? null : await client.checkOffer({ pdf: file });
+  if (offerPdf.files[0] !== file) return; // another file was picked meanwhile
+  if (problem !== null) dropFile();
+  offerProblem(problem === null ? "" : inputText(problem));
+});
+
+$("askfolio-offer-remove").addEventListener("click", () => {
+  dropFile();
+  offerProblem("");
+  offerPdf.focus(); // the button is gone: the file control, to pick another, or Tab to the text
+});
+
+offerText.addEventListener("input", () => {
+  const max = client.limits.jobOfferMaxTextChars;
+  const text = offerTextLength(offerText.value) > max ? TEXT.offerLong(max) : "";
+  if (text !== offerError.textContent) offerProblem(text, false); // once, not at every key; the
+  // field, where the visitor is typing, stays where it is
+});
+
+// As for the question: a session is opened (Turnstile runs) while the visitor pastes or picks.
+for (const field of [offerText, offerPdf]) {
+  field.addEventListener("focus", async () => {
+    await recheck();
+    if (client.session !== null || blocked !== null) return;
+    const result = await client.connect();
+    if (result.ok) limitsChanged();
+    else if (result.error.kind !== "aborted" && !turning) {
+      fail(result.error, offerProblem, OFFER_TEXT);
+    }
+  });
+}
+
+// "Analyze another offer" leads back to the form; the report stays one click away ("See the
+// report") until the next one replaces it.
+another.addEventListener("click", () => {
+  show("form");
+  fieldOf("offer").focus();
+});
+
+toReport.addEventListener("click", () => {
+  show("report");
+  report.focus({ preventScroll: true }); // where the visitor left it
+});
+
+/** Gives back a turn claimed for an offer that was not sent. */
+function release() {
+  turning = false;
+  refresh();
+}
+
+offerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (turning) return;
+  // The turn is claimed before anything is awaited, so that a second activation (a double
+  // click while the file is read) is ignored instead of sending the offer twice. The busy state
+  // is drawn only once the offer passed its checks.
+  turning = true;
+  if (blocked !== null) await recheck(); // at once before the notice's time: no request
+  if (blocked !== null) return release();
+  const file = offerPdf.files[0];
+  const text = offerText.value;
+  const offer = file === undefined ? { text } : { pdf: file };
+  // Checked first, so that a refused offer shows its message without a busy state.
+  const problem = await client.checkOffer(offer);
+  if (problem !== null) {
+    release();
+    if (file !== undefined && offerPdf.files[0] === file) dropFile();
+    return offerProblem(inputText(problem));
+  }
+  if (blocked !== null) return release(); // a notice appeared while the file was read
+  offerProblem("");
+  const fromAnalyse = document.activeElement === analyse;
+  spoken = new Set();
+  refresh();
+  if (fromAnalyse) offerStop.focus(); // Analyze is hidden: the focus goes to Stop, in its place
+  report.setAttribute("aria-busy", "true");
+  setStatus(TEXT.readingOffer);
+  const result = await client.sendOffer({
+    ...offer, // checked again by the client before it is sent
+    onProgress: (progress) => setStatus(progressText(progress, OFFER_TEXT), progress.stage),
+  });
+  // Where the visitor is, read while Stop is still shown (hiding it would move a focus on it to
+  // <body>): a focus on an offer field means they are working on the next offer, empty or not.
+  const active = document.activeElement;
+  const inPanel = panel.contains(active);
+  const working = offerForm.contains(active) && active.matches("textarea, input");
+  const typing = working || (active?.matches?.("textarea, input") && active.value !== "");
+  turning = false;
+  setStatus("");
+  report.setAttribute("aria-busy", "false");
+  // The fields stayed editable: drop only what was sent, never what the visitor typed or picked
+  // during the analysis.
+  const sentFile = file !== undefined && offerPdf.files[0] === file;
+  if (result.ok) {
+    if (file === undefined && offerText.value === text) offerText.value = ""; // the offer sent
+    if (sentFile) dropFile(); // leaves the page; the service stores none either
+    showReport(result.value);
+    scrolls.report = 0; // a new report is read from its top
+    // The report replaces the form, unless the visitor is working in it: then it waits behind
+    // "See the report", and its summary is announced either way.
+    if (!working) show("report");
+    if (showing === "report" && view === "offer") giveScroll(); // a report replacing a report
+    refresh();
+    // The focus moves to the report only from inside the panel: never from the page around a
+    // floating panel, nor from a field the visitor is typing in.
+    if (view !== "offer") tabMark.hidden = false;
+    else if (showing === "report" && !typing && inPanel) report.focus({ preventScroll: true });
+  } else {
+    const lost = report.contains(document.activeElement); // the report, about to be hidden
+    show("form"); // the message is under the form
+    refresh();
+    if (lost) (file === undefined ? offerText : offerPdf).focus(); // the field that was sent
+    const refused = result.error.kind === "http" ? REFUSED_OFFER[result.error.code] : undefined;
+    if (refused === undefined) fail(result.error, offerProblem, OFFER_TEXT);
+    else {
+      if (sentFile) dropFile();
+      offerProblem(refused(file !== undefined));
+    }
+  }
+  if (pending !== null) {
+    setTopic(pending); // a topic button pressed during the analysis
+    pending = null;
+  }
+  if (!panel.contains(document.activeElement)) leaveStop(active); // unless the report took it
+});
+
+/** Where evidence was found, named as the topic control names it: the background, or a project. */
+function sourceName(projectId) {
+  const value = projectId === "profile" ? "profile" : `project:${projectId}`;
+  const name = topicName(value);
+  return name === value ? projectId : name; // a project the page does not list: its id
+}
+
+/**
+ * The report, as text only (textContent, never innerHTML; no Markdown): its disclaimer first,
+ * the summary, the requirements (required ones first) with their match and evidence, the gaps,
+ * the questions, and the note that a long offer was cut. The report is in the offer's language;
+ * the words this script adds are in the page's, and say so.
+ */
+function showReport(outcome) {
+  if (outcome.kind === "refused") {
+    report.removeAttribute("lang"); // the service's fixed refusal, whose language is not given
+    report.replaceChildren(element("p", outcome.text, "askfolio__refusal"));
+    return announce(outcome.text);
+  }
+  const { disclaimer, summary, requirements, gaps, questionsForCandidate, input } = outcome.report;
+  const said = (tag, text, className) =>
+    Object.assign(element(tag, text, className), { lang: document.documentElement.lang });
+  const list = (items, className) => {
+    const node = element("ul", undefined, className);
+    for (const item of items) node.append(item instanceof Node ? item : element("li", item));
+    return node;
+  };
+  const requirement = (item) => {
+    const row = element("li", undefined, `askfolio__requirement is-${item.match}`);
+    const meter = element("span", undefined, "askfolio__meter");
+    meter.setAttribute("aria-hidden", "true"); // the words next to it say the same
+    meter.append(element("i"), element("i"), element("i"));
+    row.append(
+      meter,
+      element("p", item.requirement, "askfolio__need"),
+      said("p", TEXT.match[item.match], "askfolio__match"),
+    );
+    const evidence = item.evidence.map((proof) => {
+      const line = element("li");
+      const source = said("span", sourceName(proof.projectId), "askfolio__source");
+      line.append(source, " ", proof.description);
+      if (proof.files?.length) line.append(list(proof.files, "askfolio__files"));
+      return line;
+    });
+    if (evidence.length > 0) row.append(list(evidence, "askfolio__evidence"));
+    return row;
+  };
+  const groups = ["must", "nice"].flatMap((importance) => {
+    const items = requirements.filter((item) => item.importance === importance);
+    if (items.length === 0) return [];
+    const rows = list(items.map(requirement), "askfolio__requirements");
+    return [said("h4", TEXT.importance[importance]), rows];
+  });
+  report.lang = outcome.report.language; // the report is written in the offer's language
+  report.replaceChildren(
+    element("p", disclaimer, "askfolio__disclaimer"), // first, always
+    ...(input.truncated ? [said("p", TEXT.truncated, "askfolio__truncated")] : []),
+    said("h3", TEXT.summary),
+    element("p", summary, "askfolio__summary"),
+    said("h3", TEXT.requirements),
+    ...groups,
+    ...(gaps.length > 0 ? [said("h3", TEXT.gaps), list(gaps, "askfolio__gaps")] : []),
+    ...(questionsForCandidate.length > 0
+      ? [said("h3", TEXT.questions), list(questionsForCandidate, "askfolio__asks")]
+      : []),
+  );
+  announce(summary);
+}

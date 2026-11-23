@@ -369,6 +369,7 @@
               <svg class="brand" viewBox="0 0 142.06 36" aria-hidden="true" focusable="false"><path fill="#0a66c2" d="M139.4,0H108.72a2.63,2.63,0,0,0-2.66,2.6V33.4a2.63,2.63,0,0,0,2.66,2.6H139.4a2.63,2.63,0,0,0,2.66-2.6V2.6A2.63,2.63,0,0,0,139.4,0Z"/><g fill="#fff"><polygon points="0 5.32 5.55 5.32 5.55 25.55 15.83 25.55 15.83 30.68 0 30.68 0 5.32"/><path d="M18.29,13.49h5.34V30.67H18.29ZM21,4.95A3.09,3.09,0,1,1,17.86,8,3.1,3.1,0,0,1,21,4.95"/><polygon points="45.94 5.32 51.27 5.32 51.27 20.48 57.32 13.48 63.86 13.48 56.86 21.43 63.71 30.68 57.01 30.68 51.34 22.18 51.27 22.18 51.27 30.68 45.94 30.68 45.94 5.32"/><path d="M26.58,13.49H31.7v2.35h.07a5.61,5.61,0,0,1,5.05-2.77c5.41,0,6.4,3.56,6.4,8.18v9.42H37.89V22.32c0-2,0-4.55-2.78-4.55s-3.2,2.17-3.2,4.41v8.5H26.58Z"/><path d="M75.09,20.08a3.2,3.2,0,0,0-3.28-3.27A3.56,3.56,0,0,0,68,20.08Zm4.52,7.61a9.4,9.4,0,0,1-7.29,3.42c-5.34,0-9.61-3.56-9.61-9.08S67,13,72.32,13c5,0,8.11,3.56,8.11,9.07v1.67H68a4,4,0,0,0,4,3.35A4.55,4.55,0,0,0,75.87,25Z"/><path d="M91.55,17.64A4,4,0,0,0,87.28,22a4.27,4.27,0,1,0,8.54,0,4,4,0,0,0-4.27-4.38m9.18,13H95.82V28.39h-.07a6.71,6.71,0,0,1-5.3,2.71c-5.13,0-8.51-3.7-8.51-8.93,0-4.81,3-9.22,7.9-9.22,2.21,0,4.27.6,5.48,2.28h.07V5.32h5.34Z"/><path d="M111.4,13.5h5.34V30.68H111.4ZM114.08,5a3.1,3.1,0,1,1-3.1,3.1,3.1,3.1,0,0,1,3.1-3.1"/><path d="M120.1,13.5h5.12v2.35h.07a5.61,5.61,0,0,1,5.05-2.77c5.41,0,6.4,3.56,6.4,8.18v9.42h-5.34V22.32c0-2,0-4.56-2.78-4.56s-3.2,2.17-3.2,4.41v8.5H120.1Z"/></g></svg>
             </a>
           </div>
+          <button class="askfolio-topic askfolio-topic--offer" type="button" data-askfolio-view="offer" hidden><svg class="askfolio-dial" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><circle cx="20" cy="20" r="18.5" class="askfolio-dial__rim"/><circle cx="20" cy="20" r="14.5" pathLength="360" class="askfolio-dial__ticks"/><path d="M16.11 16.11a5.5 5.5 0 0 0 0 7.78M23.89 16.11a5.5 5.5 0 0 1 0 7.78M13.28 13.28a9.5 9.5 0 0 0 0 13.44M26.72 13.28a9.5 9.5 0 0 1 0 13.44" class="askfolio-dial__waves"/><circle cx="20" cy="20" r="2.1" class="askfolio-dial__lamp"/></svg><span class="askfolio-topic__text">Hiring? Check a job offer against my profile</span></button>
         </div>
       </section>
 
@@ -409,76 +410,123 @@
         </button>
       </div>
       <p class="askfolio__disclosure" id="askfolio-disclosure"></p>
-      <div class="askfolio__topic">
-        <label for="askfolio-topic">Topic</label>
-        <select class="askfolio__select" id="askfolio-topic">
-          <option value="all">The whole portfolio</option>
-          <option value="profile">Adrien’s background</option>
-          <optgroup label="Projects">
-            <option value="project:checkout-surge">Checkout Surge</option>
-            <option value="project:social-media-coach">AI Social Media Coach</option>
-            <option value="project:oc-lettings">OC Lettings</option>
-            <option value="project:epicevents-crm">EpicEvents CRM</option>
-            <option value="project:gudlift-registration">Gudlift registration</option>
-            <option value="project:softdesk-api">SoftDesk-API</option>
-          </optgroup>
-        </select>
+      <div class="askfolio__tabs" role="tablist" aria-label="Assistant modes">
+        <button class="askfolio__tab" id="askfolio-tab-chat" type="button" role="tab" aria-selected="true" aria-controls="askfolio-view-chat">Conversation</button>
+        <button class="askfolio__tab" id="askfolio-tab-offer" type="button" role="tab" aria-selected="false" aria-controls="askfolio-view-offer" tabindex="-1">Job offer<span class="askfolio__tab-mark" id="askfolio-tab-mark" hidden><span class="vh">, report ready</span></span></button>
       </div>
       <div class="askfolio__scale" aria-hidden="true"><span class="askfolio__needle"></span></div>
     </header>
-    <div class="askfolio__main">
-      <div class="askfolio__body">
-        <ol class="askfolio__log" id="askfolio-log" role="log" aria-live="off" aria-busy="false" aria-label="Conversation"></ol>
-        <div class="askfolio__empty" id="askfolio-empty">
-          <div class="askfolio__starter" data-askfolio-starter="all">
-            <p class="askfolio__invite">Ask about Adrien’s background or any of his projects.</p>
-            <ul class="askfolio__suggestions" aria-label="Suggested questions">
-              <li><button class="askfolio__suggestion" type="button">What kind of role is Adrien looking for?</button></li>
-              <li><button class="askfolio__suggestion" type="button">Which project best shows his backend skills?</button></li>
-              <li><button class="askfolio__suggestion" type="button">How does he work with AI coding agents?</button></li>
-            </ul>
-          </div>
-          <div class="askfolio__starter" data-askfolio-starter="profile" hidden>
-            <p class="askfolio__invite">Ask about Adrien’s background, from product data to development.</p>
-            <ul class="askfolio__suggestions" aria-label="Suggested questions">
-              <li><button class="askfolio__suggestion" type="button">How did Adrien move from product data to development?</button></li>
-              <li><button class="askfolio__suggestion" type="button">What did he do as a freelancer?</button></li>
-              <li><button class="askfolio__suggestion" type="button">What are his main technical strengths?</button></li>
-            </ul>
-          </div>
-          <div class="askfolio__starter" data-askfolio-starter="project" hidden>
-            <p class="askfolio__invite">Ask anything about this project.</p>
-            <ul class="askfolio__suggestions" aria-label="Suggested questions">
-              <li><button class="askfolio__suggestion" type="button">What problem does this project solve?</button></li>
-              <li><button class="askfolio__suggestion" type="button">What was the hardest technical part?</button></li>
-              <li><button class="askfolio__suggestion" type="button">Which technologies does it use, and why?</button></li>
-            </ul>
-          </div>
-        </div>
-        <p class="askfolio__status" id="askfolio-status" aria-hidden="true"></p>
-      </div>
-      <div class="vh" id="askfolio-live" aria-live="polite"></div>
+    <div class="askfolio__signal">
       <p class="askfolio__notice" id="askfolio-notice" hidden>
         <span class="askfolio__notice-text"></span>
         <a class="askfolio__contact" href="mailto:adrien.maisak@gmail.com">Email Adrien</a>
       </p>
-      <form class="askfolio__ask" id="askfolio-ask">
-        <div class="askfolio__turnstile" id="askfolio-turnstile"></div>
-        <p class="askfolio__privacy">Questions are logged anonymously to improve this assistant. Do not share sensitive information.</p>
-        <div class="askfolio__field-head">
-          <label for="askfolio-question">Your question</label>
-          <span class="askfolio__counter" id="askfolio-counter"></span>
+      <div class="askfolio__turnstile" id="askfolio-turnstile"></div>
+    </div>
+    <div class="askfolio__main">
+      <div class="askfolio__view" id="askfolio-view-chat" role="tabpanel" aria-labelledby="askfolio-tab-chat">
+        <div class="askfolio__topic">
+          <label for="askfolio-topic">Topic</label>
+          <select class="askfolio__select" id="askfolio-topic">
+            <option value="all">The whole portfolio</option>
+            <option value="profile">Adrien’s background</option>
+            <optgroup label="Projects">
+              <option value="project:checkout-surge">Checkout Surge</option>
+              <option value="project:social-media-coach">AI Social Media Coach</option>
+              <option value="project:oc-lettings">OC Lettings</option>
+              <option value="project:epicevents-crm">EpicEvents CRM</option>
+              <option value="project:gudlift-registration">Gudlift registration</option>
+              <option value="project:softdesk-api">SoftDesk-API</option>
+            </optgroup>
+          </select>
         </div>
-        <textarea class="askfolio__question" id="askfolio-question" rows="2" aria-describedby="askfolio-counter"></textarea>
-        <div class="askfolio__actions">
-          <button class="askfolio__new" id="askfolio-new" type="button" hidden>New conversation</button>
-          <button class="askfolio__send" id="askfolio-send" type="submit">Send</button>
-          <button class="askfolio__stop" id="askfolio-stop" type="button" hidden>
+        <div class="askfolio__body">
+          <ol class="askfolio__log" id="askfolio-log" role="log" aria-live="off" aria-busy="false" aria-label="Conversation"></ol>
+          <div class="askfolio__empty" id="askfolio-empty">
+            <div class="askfolio__starter" data-askfolio-starter="all">
+              <p class="askfolio__invite">Ask about Adrien’s background or any of his projects.</p>
+              <ul class="askfolio__suggestions" aria-label="Suggested questions">
+                <li><button class="askfolio__suggestion" type="button">What kind of role is Adrien looking for?</button></li>
+                <li><button class="askfolio__suggestion" type="button">Which project best shows his backend skills?</button></li>
+                <li><button class="askfolio__suggestion" type="button">How does he work with AI coding agents?</button></li>
+              </ul>
+            </div>
+            <div class="askfolio__starter" data-askfolio-starter="profile" hidden>
+              <p class="askfolio__invite">Ask about Adrien’s background, from product data to development.</p>
+              <ul class="askfolio__suggestions" aria-label="Suggested questions">
+                <li><button class="askfolio__suggestion" type="button">How did Adrien move from product data to development?</button></li>
+                <li><button class="askfolio__suggestion" type="button">What did he do as a freelancer?</button></li>
+                <li><button class="askfolio__suggestion" type="button">What are his main technical strengths?</button></li>
+              </ul>
+            </div>
+            <div class="askfolio__starter" data-askfolio-starter="project" hidden>
+              <p class="askfolio__invite">Ask anything about this project.</p>
+              <ul class="askfolio__suggestions" aria-label="Suggested questions">
+                <li><button class="askfolio__suggestion" type="button">What problem does this project solve?</button></li>
+                <li><button class="askfolio__suggestion" type="button">What was the hardest technical part?</button></li>
+                <li><button class="askfolio__suggestion" type="button">Which technologies does it use, and why?</button></li>
+              </ul>
+            </div>
+          </div>
+          <p class="askfolio__status" id="askfolio-status" aria-hidden="true"></p>
+        </div>
+        <form class="askfolio__ask" id="askfolio-ask">
+          <p class="askfolio__privacy">Questions are logged anonymously to improve this assistant. Do not share sensitive information.</p>
+          <div class="askfolio__field-head">
+            <label for="askfolio-question">Your question</label>
+            <span class="askfolio__counter" id="askfolio-counter"></span>
+          </div>
+          <textarea class="askfolio__question" id="askfolio-question" rows="2" aria-describedby="askfolio-counter"></textarea>
+          <div class="askfolio__actions">
+            <button class="askfolio__new" id="askfolio-new" type="button" hidden>New conversation</button>
+            <button class="askfolio__send" id="askfolio-send" type="submit">Send</button>
+            <button class="askfolio__stop" id="askfolio-stop" type="button" hidden>
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="4" y="4" width="8" height="8" rx="1.5"/></svg>
+              Stop
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="askfolio__view" id="askfolio-view-offer" role="tabpanel" aria-labelledby="askfolio-tab-offer" hidden>
+        <div class="askfolio__body askfolio__body--offer">
+          <div class="askfolio__sheet" id="askfolio-sheet">
+            <form class="askfolio__offer" id="askfolio-offer">
+              <p class="askfolio__invite">Check a job offer against Adrien’s profile.</p>
+              <p class="askfolio__disclaimer" id="askfolio-offer-disclaimer"></p>
+              <p class="askfolio__privacy">Paste the job offer or upload it as a PDF. The file and the text are not stored. Questions are logged anonymously to improve this assistant.</p>
+              <label class="askfolio__label" for="askfolio-offer-text">Job offer text</label>
+              <textarea class="askfolio__question askfolio__offer-text" id="askfolio-offer-text" rows="6" aria-describedby="askfolio-offer-error"></textarea>
+              <p class="askfolio__or">or</p>
+              <div class="askfolio__file">
+                <input class="askfolio__file-input" id="askfolio-offer-pdf" type="file" accept="application/pdf,.pdf" aria-describedby="askfolio-offer-error askfolio-offer-hint">
+                <label class="askfolio__file-pick" for="askfolio-offer-pdf">
+                  <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 10.5V2.5M4.6 5.9 8 2.5l3.4 3.4M2.5 13.5h11"/></svg>
+                  Upload a PDF
+                </label>
+                <span class="askfolio__file-hint" id="askfolio-offer-hint"></span>
+              </div>
+              <p class="askfolio__chosen" id="askfolio-offer-chosen" hidden>
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 1.75h5.25L12.5 5v9.25h-8.5zM9 1.75V5.25h3.5"/></svg>
+                <span class="askfolio__chosen-name" id="askfolio-offer-file"></span>
+                <button class="askfolio__remove" id="askfolio-offer-remove" type="button">Remove<span class="vh"> the file</span></button>
+              </p>
+              <p class="askfolio__offer-error" id="askfolio-offer-error"></p>
+            </form>
+            <section class="askfolio__report" id="askfolio-report" tabindex="-1" aria-label="Job offer report" aria-busy="false" hidden></section>
+          </div>
+          <p class="askfolio__status" id="askfolio-offer-status" aria-hidden="true"></p>
+        </div>
+        <div class="askfolio__bar">
+          <button class="askfolio__new" id="askfolio-to-report" type="button" hidden>See the report</button>
+          <button class="askfolio__stop askfolio__another" id="askfolio-another" type="button" hidden>Analyze another offer</button>
+          <button class="askfolio__send" id="askfolio-analyse" type="submit" form="askfolio-offer">Analyze</button>
+          <button class="askfolio__stop" id="askfolio-offer-stop" type="button" hidden>
             <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="4" y="4" width="8" height="8" rx="1.5"/></svg>
             Stop
           </button>
         </div>
-      </form>
+      </div>
+      <div class="vh" id="askfolio-live" aria-live="polite"></div>
     </div>
   </dialog>
 

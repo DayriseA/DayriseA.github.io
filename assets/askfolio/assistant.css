@@ -3,7 +3,8 @@
    the visitor can touch it. The panel is a flight log: the visitor's questions are compact warm
    transmissions, the answers are logbook entries in moonlight. One bold element: the tuning scale
    along the bottom of the panel's header, whose needle sweeps while the assistant works and stays
-   where it stopped. Built on the custom properties of index.css. */
+   where it stopped. Two bands sit on that scale: the conversation and the job-offer analysis, whose
+   report reads its evidence like a signal meter. Built on the custom properties of index.css. */
 
 .askfolio,
 .askfolio-launcher {
@@ -260,6 +261,14 @@
   }
 }
 
+/* In the contact section: the one way in to the job-offer analysis, under the section's own actions
+   and quieter than them. */
+.askfolio-topic--offer {
+  display: flex;
+  width: fit-content;
+  margin: 34px auto 0;
+}
+
 /* ---------- Panel ---------- */
 
 .askfolio {
@@ -329,7 +338,7 @@ html:has(.askfolio:modal) {
   outline-offset: 2px;
 }
 
-/* ---------- Header: title, disclosure, topic, tuning scale ---------- */
+/* ---------- Header: title, disclosure, view switch, tuning scale ---------- */
 
 .askfolio__head {
   flex: none;
@@ -402,15 +411,82 @@ html:has(.askfolio:modal) {
   color: var(--moon);
 }
 
-/* The topic: tuned like a station. The select shows the current topic, underlined in lamp light as
-   everything the visitor can touch; its list names the whole portfolio, the background and each
-   project. */
-.askfolio__topic {
+/* The two views, as two bands of the radio: the selected one is lit by a lamp bar that rests on the
+   tuning scale. */
+.askfolio__tabs {
   display: flex;
+  gap: 22px;
+  margin-top: 4px;
+}
+
+.askfolio__tab {
+  position: relative;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 -4px;
-  padding-right: 6px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 2px;
+  font: 500 .9375rem/1.3 var(--sans);
+  letter-spacing: .015em;
+  color: var(--moon-dim);
+  background: none;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.askfolio__tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--lamp);
+  box-shadow: 0 0 8px rgba(246, 185, 79, .7);
+  opacity: 0;
+  transform: scaleX(.3);
+  transition: opacity .2s, transform .25s ease-out;
+}
+
+.askfolio__tab:hover {
+  color: var(--lamp-soft);
+}
+
+.askfolio__tab[aria-selected="true"] {
+  color: var(--paper);
+}
+
+.askfolio__tab[aria-selected="true"]::after {
+  opacity: 1;
+  transform: none;
+}
+
+/* A report arrived while the conversation was shown: a beacon on its band. */
+.askfolio__tab-mark {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--beacon);
+  box-shadow: 0 0 0 3px rgba(134, 224, 176, .16), 0 0 10px 1px rgba(134, 224, 176, .7);
+}
+
+/* The topic, at the top of the conversation view: tuned like a station. The select shows the
+   current topic, underlined in lamp light as everything the visitor can touch; its list names the
+   whole portfolio, the background and each project. An analysis has none. */
+.askfolio__topic {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 20px 0;
+}
+
+.askfolio:modal .askfolio__topic {
+  padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
 }
 
 .askfolio__topic label {
@@ -549,7 +625,7 @@ html:has(.askfolio:modal) {
 .askfolio__scale {
   position: relative;
   height: 15px;
-  margin: 12px -14px 0 -20px;
+  margin: 0 -14px 0 -20px;
   background:
     linear-gradient(90deg, rgba(169, 187, 220, .55) 1px, transparent 1px) 20px 100% / 40px 10px repeat-x,
     linear-gradient(90deg, rgba(169, 187, 220, .32) 1px, transparent 1px) 20px 100% / 8px 5px repeat-x,
@@ -611,11 +687,20 @@ html:has(.askfolio:modal) {
   }
 }
 
+/* ---------- Under the header: why nothing can be sent, and the human check ----------
+   Shared by both views, and never scrolled away: a notice disables Send and Analyze alike, and the
+   challenge must be in the layout whenever either can be pressed (a session may be created or
+   renewed by a message or by an analysis). Empty, the strip takes no room. */
+
+.askfolio__signal {
+  flex: none;
+}
+
 /* ---------- Conversation ---------- */
 
-/* Everything under the header. It fits the panel; when the panel is too short for the log's
-   minimum, the composer and a challenge (a phone in landscape, a virtual keyboard), it scrolls
-   instead of clipping, so that Send stays reachable and the header never moves. */
+/* Everything under the header and the strip. It fits the panel; when the panel is too short for a
+   view's minimum (a phone in landscape, a virtual keyboard), it scrolls instead of clipping, so that
+   Send and Analyze stay reachable and the header never moves. */
 .askfolio__main {
   display: flex;
   flex: 1 1 0;
@@ -626,6 +711,13 @@ html:has(.askfolio:modal) {
   scrollbar-width: thin;
   scrollbar-color: rgba(169, 187, 220, .3) transparent;
   container-type: size; /* the question field's growth follows the room left */
+}
+
+/* A view fills the room under the header, and grows past it when the room is too short. */
+.askfolio__view {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
 }
 
 .askfolio__body {
@@ -1075,8 +1167,7 @@ html:has(.askfolio:modal) {
 /* ---------- Notice: why nothing can be sent ---------- */
 
 .askfolio__notice {
-  flex: none;
-  margin: 0 20px 4px;
+  margin: 12px 20px 0;
   padding: 12px 14px;
   font: 400 1rem/1.45 var(--sans);
   color: var(--paper);
@@ -1118,8 +1209,13 @@ html:has(.askfolio:modal) {
 
 /* Empty except while a challenge is shown; Cloudflare's widget is about 65px high. */
 .askfolio__turnstile {
-  margin-bottom: 12px;
+  margin: 12px 20px 0;
   color-scheme: dark;
+}
+
+.askfolio:modal .askfolio__notice,
+.askfolio:modal .askfolio__turnstile {
+  margin-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
 }
 
 .askfolio__turnstile:empty {
@@ -1266,6 +1362,455 @@ html:has(.askfolio:modal) {
   box-shadow: none;
 }
 
+/* ---------- The job-offer view ----------
+   The form, then the report that replaces it, scroll in one sheet; the bar under them keeps Analyze
+   (or Stop, or "Analyze another offer") in reach, as the composer keeps Send. */
+
+.askfolio__body--offer {
+  min-height: 10rem;
+}
+
+.askfolio__sheet {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 187, 220, .3) transparent;
+  padding: 22px 20px 44px;
+}
+
+.askfolio:modal .askfolio__sheet,
+.askfolio:modal .askfolio__bar {
+  padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
+}
+
+.askfolio__offer .askfolio__invite {
+  margin-bottom: 14px;
+}
+
+/* The fixed notice that an analysis is AI-generated: a margin note in the log, in plain
+   moonlight. */
+.askfolio__disclaimer {
+  padding: 2px 0 2px 14px;
+  font: 400 .9375rem/1.5 var(--sans);
+  color: var(--moon);
+  border-left: 2px solid var(--haze);
+}
+
+.askfolio__offer .askfolio__privacy {
+  margin-top: 14px;
+}
+
+.askfolio__label {
+  display: block;
+  margin-top: 18px;
+  font: 500 .9375rem/1.4 var(--sans);
+  letter-spacing: .015em;
+  color: var(--paper);
+}
+
+.askfolio__question.askfolio__offer-text {
+  min-height: calc(5lh + 22px);
+  max-height: calc(14lh + 22px);
+}
+
+.askfolio__offer-text:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+/* "or", between the text and the file, on a hairline */
+.askfolio__or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 10px;
+  font: 400 .875rem/1.4 var(--sans);
+  color: var(--moon-dim);
+}
+
+.askfolio__or::before,
+.askfolio__or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(132, 162, 222, .2);
+}
+
+.askfolio__file {
+  position: relative; /* the hidden input stays in the sheet: its focus never scrolls the panel */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+/* The native control stays in the page, focusable and operable from the keyboard; its label is
+   what the visitor sees and presses, and carries its focus ring. */
+.askfolio__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  opacity: 0;
+}
+
+.askfolio__file-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 20px 0 17px;
+  font: 500 .9375rem/1.2 var(--sans);
+  letter-spacing: .015em;
+  color: var(--paper);
+  background: rgba(15, 33, 82, .35);
+  border: 1px solid rgba(169, 187, 220, .55);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+
+.askfolio__file-pick:hover {
+  color: var(--lamp-soft);
+  border-color: var(--lamp);
+}
+
+.askfolio__file-input:focus-visible + .askfolio__file-pick {
+  outline: 2px solid var(--lamp);
+  outline-offset: 2px;
+}
+
+.askfolio__file-pick svg,
+.askfolio__chosen svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.askfolio__file-hint {
+  font: 400 .875rem/1.4 var(--sans);
+  color: var(--moon-dim);
+}
+
+/* The chosen file: the visitor's own, outlined warm like their questions. */
+.askfolio__chosen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 0 6px 0 14px;
+  font: 400 .9375rem/1.4 var(--sans);
+  color: var(--paper);
+  border: 1px solid rgba(246, 185, 79, .5);
+  border-radius: 12px;
+  background: rgba(246, 185, 79, .06);
+}
+
+.askfolio__chosen-name {
+  flex: 1;
+  min-width: 0;
+  padding-block: 10px;
+  overflow-wrap: anywhere;
+}
+
+.askfolio__remove {
+  flex: none;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 8px;
+  font: 400 .9375rem/1.2 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .28em;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.askfolio__remove:hover {
+  color: var(--lamp-soft);
+  text-decoration-thickness: 2px;
+}
+
+/* What keeps the offer from being sent, tied to both fields. */
+.askfolio__offer-error {
+  position: relative;
+  margin-top: 12px;
+  padding-left: 22px;
+  font: 400 .9375rem/1.45 var(--sans);
+  color: var(--askfolio-error);
+}
+
+.askfolio__offer-error:empty {
+  display: none;
+}
+
+.askfolio__offer-error::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: calc(.725em - 5px);
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: radial-gradient(circle, currentColor 0 1.5px, transparent 2px);
+}
+
+.askfolio__bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid rgba(132, 162, 222, .16);
+}
+
+.askfolio:modal .askfolio__bar {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* During a turn, "Analyze another offer" steps aside for Stop. */
+.askfolio__another.is-aside {
+  margin: 0 auto 0 0;
+}
+
+/* ---------- The report: a logbook page ----------
+   Each requirement is read like a signal: three rising bars, lit for a strong match, two for a
+   partial one, none lit when nothing was found, a flat line when it cannot be assessed; its words
+   are always written beside it. */
+
+.askfolio__report:focus {
+  outline: none;
+}
+
+.askfolio__truncated {
+  position: relative;
+  margin-top: 12px;
+  padding-left: 24px;
+  font: 400 .9375rem/1.45 var(--sans);
+  color: var(--moon-dim);
+}
+
+.askfolio__truncated::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: .72em;
+  width: 9px;
+  height: 1.5px;
+  background: var(--haze);
+}
+
+.askfolio__report h3 {
+  margin-top: 26px;
+  padding-top: 16px;
+  font: 500 1.0625rem/1.35 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+  border-top: 1px solid var(--askfolio-line);
+}
+
+.askfolio__report h4 {
+  margin-top: 16px;
+  font: 400 .875rem/1.4 var(--sans);
+  letter-spacing: .02em;
+  color: var(--moon-dim);
+}
+
+.askfolio__summary {
+  margin-top: 10px;
+  font: 300 1.0625rem/1.6 var(--serif);
+  color: var(--moon);
+  overflow-wrap: break-word;
+}
+
+.askfolio__requirements {
+  margin-top: 4px;
+}
+
+.askfolio__requirement {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 12px;
+  padding: 12px 0;
+}
+
+.askfolio__requirement + .askfolio__requirement {
+  border-top: 1px solid rgba(132, 162, 222, .14);
+}
+
+.askfolio__requirement > * {
+  grid-column: 2;
+}
+
+.askfolio__meter {
+  display: flex;
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.askfolio__meter i {
+  width: 4px;
+  height: 6px;
+  border-radius: 1px;
+  background: rgba(169, 187, 220, .24);
+}
+
+.askfolio__meter i:nth-child(2) {
+  height: 11px;
+}
+
+.askfolio__meter i:nth-child(3) {
+  height: 16px;
+}
+
+.is-strong .askfolio__meter i,
+.is-partial .askfolio__meter i:not(:last-child) {
+  background: var(--beacon);
+  box-shadow: 0 0 6px rgba(134, 224, 176, .45);
+}
+
+/* No reading: a flat, broken line on the baseline. */
+.is-unknown .askfolio__meter i {
+  height: 2px;
+  background: rgba(169, 187, 220, .5);
+}
+
+.askfolio__need {
+  font: 500 1rem/1.4 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+  overflow-wrap: break-word;
+}
+
+.askfolio__match {
+  margin-top: 1px;
+  font: 400 .875rem/1.4 var(--sans);
+  letter-spacing: .01em;
+  color: var(--moon-dim);
+}
+
+.is-strong .askfolio__match {
+  color: var(--beacon);
+}
+
+.is-partial .askfolio__match {
+  color: var(--moon);
+}
+
+.askfolio__evidence {
+  margin-top: 8px;
+}
+
+.askfolio__evidence > li {
+  padding: 1px 0 1px 13px;
+  font: 300 .96875rem/1.55 var(--serif);
+  color: var(--moon);
+  border-left: 1px solid var(--askfolio-line);
+  overflow-wrap: break-word;
+}
+
+.askfolio__evidence > li + li {
+  margin-top: 8px;
+}
+
+.askfolio__source {
+  display: block;
+  font: 500 .875rem/1.5 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+}
+
+.askfolio__files {
+  margin-top: 3px;
+  font: 400 .8125rem/1.45 var(--sans);
+  letter-spacing: .01em;
+  color: var(--haze);
+  overflow-wrap: anywhere;
+}
+
+.askfolio__gaps,
+.askfolio__asks {
+  margin-top: 10px;
+}
+
+.askfolio__gaps > li,
+.askfolio__asks > li {
+  position: relative;
+  padding-left: 22px;
+  font: 300 1rem/1.55 var(--serif);
+  color: var(--moon);
+  overflow-wrap: break-word;
+}
+
+.askfolio__gaps > li + li,
+.askfolio__asks > li + li {
+  margin-top: 8px;
+}
+
+/* A gap: an open waypoint, not reached. */
+.askfolio__gaps > li::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: calc(.775em - 4.5px);
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--haze);
+  border-radius: 50%;
+}
+
+.askfolio__asks > li::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: calc(.775em - .75px);
+  width: 10px;
+  height: 1.5px;
+  background: var(--haze);
+}
+
+/* A refused analysis: the service's fixed text, as an entry of the log. */
+.askfolio__refusal {
+  position: relative;
+  padding-left: 24px;
+  font: 300 1.0625rem/1.6 var(--serif);
+  color: var(--moon);
+}
+
+.askfolio__refusal::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .5em;
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--moon);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--moon) 0 1.6px, transparent 2px);
+}
+
 /* ---------- Short viewports: a tighter header, the disclosure unchanged ---------- */
 
 @media (max-height: 500px) {
@@ -1286,12 +1831,12 @@ html:has(.askfolio:modal) {
     margin-top: 2px;
   }
 
-  .askfolio__scale {
-    margin-top: 8px;
-  }
-
   .askfolio__body {
     min-height: 6rem;
+  }
+
+  .askfolio__sheet {
+    padding-top: 14px;
   }
 
   .askfolio__log {
@@ -1342,7 +1887,8 @@ html:has(.askfolio:modal) {
   .askfolio-topic *,
   .askfolio,
   .askfolio *,
-  .askfolio *::before {
+  .askfolio *::before,
+  .askfolio *::after {
     animation: none !important;
     transition: none !important;
   }
@@ -1384,6 +1930,38 @@ html:has(.askfolio:modal) {
 
   .askfolio__question:focus {
     outline: 2px solid Highlight;
+  }
+
+  .askfolio__tab[aria-selected="true"]::after,
+  .askfolio__tab-mark,
+  .askfolio__meter i,
+  .askfolio__offer-error::before,
+  .askfolio__truncated::before,
+  .askfolio__gaps > li::before,
+  .askfolio__asks > li::before,
+  .askfolio__refusal::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+
+  .askfolio__meter i {
+    background: GrayText;
+  }
+
+  .is-strong .askfolio__meter i,
+  .is-partial .askfolio__meter i:not(:last-child) {
+    background: CanvasText;
+  }
+
+  .askfolio__gaps > li::before,
+  .askfolio__refusal::before {
+    background: Canvas;
+  }
+
+  .askfolio__file-pick {
+    border-color: ButtonText;
   }
 
   .askfolio__select {
