@@ -276,8 +276,11 @@ function bubble(who, text = "") {
 
 function note(text, before = null, className = "is-note") {
   if (text === "") return;
+  // A note written above the answer in flight must not leave that answer below the fold: a log
+  // that showed its latest messages keeps showing them.
+  const following = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
   log.insertBefore(element("li", text, className), before);
-  if (before === null) log.scrollTop = log.scrollHeight;
+  if (before === null || following) log.scrollTop = log.scrollHeight;
   announce(text);
   refresh();
 }
