@@ -1227,6 +1227,29 @@ html:has(.askfolio:modal) {
   color: var(--moon-dim);
 }
 
+/* The link to the privacy page, at the end of the notice. Its target reaches 44px through a
+   pseudo-element, so the line keeps its height and the focus ring hugs the word. */
+.askfolio__more {
+  position: relative;
+  color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .24em;
+  white-space: nowrap;
+}
+
+.askfolio__more::after {
+  content: '';
+  position: absolute;
+  inset: -12px -4px;
+}
+
+.askfolio__more:hover {
+  color: var(--lamp-soft);
+  text-decoration-thickness: 2px;
+}
+
 .askfolio__field-head {
   display: flex;
   flex-wrap: wrap;

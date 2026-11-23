@@ -1394,6 +1394,225 @@ a.gh:focus-visible svg {
   margin-top: 38px;
 }
 
+/* ---------- Text pages (privacy): a flight plan read under the reading lamp ----------
+   One column of text; the sections are waypoints on a dotted plan line, the route's own dots. */
+
+.doc {
+  --rail: calc(var(--lane) * -1);
+  padding: calc(64px + clamp(56px, 9vw, 112px)) 0 clamp(88px, 11vw, 144px);
+}
+
+.doc__in {
+  position: relative;
+}
+
+/* Wide screens: the contents, in the margin, stay in view while the text scrolls */
+.doc__toc {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .doc__in {
+    display: grid;
+    grid-template-columns: minmax(0, 40em) minmax(0, 15em);
+    justify-content: space-between;
+    column-gap: 64px;
+  }
+
+  .doc__head,
+  .doc__body {
+    grid-column: 1;
+  }
+
+  .doc__toc {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    position: sticky;
+    top: 112px;
+    max-height: calc(100vh - 136px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin-top: 14px;
+  }
+}
+
+.doc__toc-title {
+  padding-bottom: 10px;
+  font: 500 .9375rem/1.3 var(--sans);
+  letter-spacing: .03em;
+  color: var(--haze);
+}
+
+.doc__toc ol {
+  border-left: 1px solid var(--rule);
+}
+
+.doc__toc a {
+  display: block;
+  padding: 6px 0 6px 18px;
+  font: 400 .9375rem/1.35 var(--sans);
+  letter-spacing: .01em;
+  color: var(--moon-dim);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.doc__toc a:hover {
+  color: var(--lamp-soft);
+}
+
+/* Inside the scrolling list, the ring is drawn within the link so it is not clipped */
+.doc__toc a:focus-visible {
+  outline-offset: -2px;
+}
+
+.doc__head,
+.doc__body {
+  max-width: 40em;
+}
+
+/* Fragment targets (the title, the section headings) land below the sticky top bar */
+.doc__head,
+.doc__part > h2 {
+  scroll-margin-top: 96px;
+}
+
+.doc h1 {
+  font-size: clamp(3rem, 2.2rem + 3.6vw, 5rem);
+  line-height: 1;
+  letter-spacing: -.025em;
+}
+
+/* « Confidentialité » is one long word: on the narrowest phones it shrinks to fit the column
+   (68px: the narrow layout's side margins) */
+.doc h1:lang(fr) {
+  font-size: min(clamp(3rem, 2.2rem + 3.6vw, 5rem), calc((100vw - 68px) / 6.6));
+}
+
+.doc__lede {
+  max-width: 26em;
+  margin-top: 18px;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.25rem, 1.05rem + .7vw, 1.5625rem);
+  line-height: 1.35;
+  color: var(--moon);
+  text-wrap: balance;
+}
+
+.doc__date {
+  margin-top: 20px;
+  font: 400 .9375rem/1.4 var(--sans);
+  letter-spacing: .02em;
+  color: var(--moon-dim);
+}
+
+.doc__body {
+  position: relative;
+  margin-top: clamp(56px, 7vw, 88px);
+}
+
+/* The plan line, from the first waypoint down, fading out under the last section */
+.doc__body::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--rail) - .75px);
+  top: .9em;
+  bottom: 0;
+  width: 1.5px;
+  background: repeating-linear-gradient(180deg, rgba(169, 187, 220, .5) 0 1.5px, transparent 1.5px 8.5px);
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 160px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 160px), transparent);
+}
+
+.doc__part + .doc__part {
+  margin-top: clamp(52px, 6vw, 76px);
+}
+
+.doc__part > h2 {
+  position: relative;
+  font-size: clamp(1.75rem, 1.35rem + 1.5vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -.012em;
+}
+
+/* Each section is a waypoint ring on the line, as on the home page's route */
+.doc__part > h2::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--rail) - 8.5px);
+  top: calc(.56em - 8.5px);
+  width: 17px;
+  height: 17px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--moon);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--moon) 0 2.5px, var(--night) 3px);
+}
+
+.doc h3 {
+  margin-top: 28px;
+  font: 500 1.125rem/1.3 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+}
+
+.doc__part > p,
+.doc__part > .ticks {
+  margin-top: 18px;
+}
+
+.doc h3 + p,
+.doc h3 + .ticks {
+  margin-top: 10px;
+}
+
+.doc__part > h2 + p,
+.doc__part > h2 + .ticks,
+.doc__part > h2 + .doc__list {
+  margin-top: 22px;
+}
+
+/* Named entries (a provider, a kind of data) on ruled lines, like a project's stack */
+.doc__list {
+  margin: 0;
+}
+
+.doc__list > div {
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.doc__list > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.doc__list dt {
+  font: 500 1.0625rem/1.35 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+}
+
+.doc__list dd {
+  margin: 6px 0 0;
+}
+
+.doc__list + p {
+  margin-top: 22px;
+}
+
+.doc__part > p + .doc__list {
+  margin-top: 18px;
+}
+
+.doc code {
+  font: .84em/1.4 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+
 /* ---------- Footer ---------- */
 
 .foot {
@@ -1410,6 +1629,37 @@ a.gh:focus-visible svg {
   justify-content: space-between;
   gap: 8px 24px;
   padding-block: 26px 30px;
+}
+
+.foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+}
+
+/* Taller targets than the line, without moving it */
+.foot__links a {
+  position: relative;
+}
+
+.foot__links a::after {
+  content: '';
+  position: absolute;
+  inset: -12px -4px;
+}
+
+.foot__quiet {
+  color: var(--moon-dim);
+  text-decoration: underline;
+  text-decoration-color: rgba(169, 187, 220, .45);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .24em;
+  transition: text-decoration-color .2s, color .2s;
+}
+
+.foot__quiet:hover {
+  color: var(--lamp-soft);
+  text-decoration-color: var(--lamp);
 }
 
 /* ---------- Narrow screens: the route runs down the left margin ---------- */
@@ -1568,6 +1818,11 @@ a.gh:focus-visible svg {
     order: -1;
     margin-top: 0;
   }
+
+  /* The plan line runs where the route's waypoints sit on the home page */
+  .doc {
+    --rail: -26px;
+  }
 }
 
 @media (max-width: 699px) {
@@ -1652,8 +1907,43 @@ a.gh:focus-visible svg {
   .sky,
   .route,
   .instrument .dial,
+  .doc__body::before,
+  .doc__part > h2::before,
+  .doc__toc,
+  .skip,
   body::after {
     display: none;
+  }
+
+  .doc {
+    padding-top: 0;
+  }
+
+  .doc h2,
+  .doc h3,
+  .doc__list dt {
+    break-after: avoid;
+  }
+
+  .doc__list > div,
+  .doc .ticks li {
+    break-inside: avoid;
+  }
+
+  .doc .ticks li::before {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc__lede,
+  .doc__date,
+  .doc h3,
+  .doc__list dt,
+  .doc code,
+  .doc .link,
+  .doc ~ .foot,
+  .doc ~ .foot a {
+    color: #111;
   }
 
   html,
