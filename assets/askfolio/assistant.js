@@ -18,16 +18,11 @@ const number = (value) => value.toLocaleString(lang);
 // The floating panel needs room around it; below this, the panel is a full-screen sheet.
 const WIDE = window.matchMedia("(min-width: 700px) and (min-height: 560px)");
 
-// Every text the script writes. The markup holds the others, in each page's language; the AI
-// disclosure comes from the client.
+// Every text the script writes. The markup holds the others, in each page's language, the topic
+// names included (the topic control's options); the AI disclosure comes from the client.
 const TEXT = {
   en: {
-    topic: (scope) =>
-      scope === "profile"
-        ? "Topic: Adrien’s background"
-        : scope === "all"
-          ? "Topic: Adrien’s background and all his projects"
-          : `Topic: the ${scope.slice("project:".length)} project`,
+    newTopic: (name) => `New conversation. Topic: ${name}.`,
     waiting: "Waiting for the assistant…",
     searching: "Looking through the files…",
     reading: (path) => `Reading ${path}`,
@@ -49,12 +44,7 @@ const TEXT = {
     tooLong: (max) => `Your message is too long (${number(max)} characters max).`,
   },
   fr: {
-    topic: (scope) =>
-      scope === "profile"
-        ? "Sujet : le parcours d’Adrien"
-        : scope === "all"
-          ? "Sujet : le parcours d’Adrien et tous ses projets"
-          : `Sujet : le projet ${scope.slice("project:".length)}`,
+    newTopic: (name) => `Nouvelle conversation. Sujet : ${name}.`,
     waiting: "En attente de l’assistant…",
     searching: "Recherche dans les fichiers…",
     reading: (path) => `Lecture de ${path}`,
@@ -92,6 +82,10 @@ const counter = $("askfolio-counter");
 const send = $("askfolio-send");
 const stop = $("askfolio-stop");
 const fresh = $("askfolio-new");
+const topic = $("askfolio-topic"); // the topic control: a <select> whose options name the topics
+const empty = $("askfolio-empty");
+const starters = empty.querySelectorAll("[data-askfolio-starter]");
+const topicButtons = document.querySelectorAll("[data-askfolio-scope]"); // on the page
 
 const client = new AskfolioClient({
   serviceUrl: SERVICE_URL,
@@ -106,18 +100,28 @@ let checking = null; // a health check under way, after a notice
 let spoken = new Set(); // the progress stages already announced in this turn
 let scrolled = false; // the log has been scrolled to its latest messages once, after opening
 let reopen = null; // { focus } while the panel is reopened in the other mode
+let opener = null; // the topic button that opened the panel, which gets the focus back on close
+let pending = null; // a topic chosen on the page during a turn, applied when the turn ends
+let drafted = null; // the scope of the draft a topic button put in the field, while untouched
 
 // ─── Start: only when the service can answer (rule 1) ─────────────────────────────────────────
 
 const health = await client.health();
 if (health.status !== "unavailable") {
   $("askfolio-disclosure").textContent = AI_DISCLOSURE[lang];
-  $("askfolio-topic").textContent = TEXT.topic(scope);
+  topic.value = scope;
+  if (topic.value !== scope) {
+    // A stored topic this page does not offer (any more): its conversation is not continued.
+    scope = topic.value = "all";
+    client.newConversation();
+  }
+  showStarter();
   showLog();
   if (health.status === "budget_exhausted") block(TEXT.budget, health.retryAt);
   count();
   launcher.hidden = false;
-  followFooter();
+  for (const button of topicButtons) button.hidden = false;
+  followPage();
 }
 
 // ─── The page's message log (the service returns no history) ─────────────────────────────────
@@ -175,9 +179,9 @@ function bubble(who, text = "") {
   return item;
 }
 
-function note(text, before = null) {
+function note(text, before = null, className = "is-note") {
   if (text === "") return;
-  log.insertBefore(element("li", text, "is-note"), before);
+  log.insertBefore(element("li", text, className), before);
   if (before === null) log.scrollTop = log.scrollHeight;
   announce(text);
   refresh();
@@ -226,6 +230,7 @@ function refresh() {
   send.hidden = turning; // Stop takes Send's place during a turn
   stop.hidden = !turning;
   fresh.disabled = turning;
+  topic.disabled = turning; // a turn keeps the scope it was sent in
   fresh.hidden = log.children.length === 0 && client.conversation === null;
   log.setAttribute("aria-busy", String(turning));
   panel.classList.toggle("is-busy", turning);
@@ -290,6 +295,7 @@ function fail(error, say) {
     case "busy":
       return; // Send is replaced by Stop during a turn
     case "input":
+      if (error.code === "invalid_scope") return say(TEXT.badTopic);
       return say(error.code === "message_too_long" ? TEXT.tooLong(error.limit) : "");
     case "turnstile":
       return say(TEXT.humanCheck);
@@ -323,7 +329,10 @@ function fail(error, say) {
 
 // ─── The panel: open, close, and the mode that fits the viewport ─────────────────────────────
 
-/** Opens the panel; `focus` is where the focus goes, `undefined` for the default target. */
+/**
+ * Opens the panel; `focus` is where the focus goes, `undefined` for the default target, `null`
+ * for the caller to move it.
+ */
 function openPanel(focus) {
   if (panel.open) return;
   if (WIDE.matches) panel.show();
@@ -343,12 +352,25 @@ function openPanel(focus) {
   else question.focus();
 }
 
-launcher.addEventListener("click", () => openPanel());
+launcher.addEventListener("click", () => {
+  opener = null;
+  openPanel();
+});
 $("askfolio-close").addEventListener("click", () => panel.close());
 
-// A modal sheet gets Escape from the browser; the floating panel handles it here.
+/** Whether the topic control's own list is open (a customizable select draws it in the page). */
+function picking() {
+  try {
+    return topic.matches(":open");
+  } catch {
+    return false; // a browser without :open draws a native list, whose keys never reach the page
+  }
+}
+
+// A modal sheet gets Escape from the browser; the floating panel handles it here, unless Escape
+// is closing the topic list.
 panel.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !event.isComposing && !panel.matches(":modal")) {
+  if (event.key === "Escape" && !event.isComposing && !panel.matches(":modal") && !picking()) {
     event.preventDefault();
     panel.close();
   }
@@ -361,7 +383,10 @@ panel.addEventListener("close", () => {
     return openPanel(focus);
   }
   launcher.hidden = false;
-  launcher.focus();
+  // Back to the topic button that opened the panel, if the page still shows it.
+  const back = opener?.isConnected && opener.getClientRects().length > 0 ? opener : launcher;
+  opener = null;
+  back.focus();
 });
 
 // Crossing the breakpoint while the panel is open: reopen it in the mode that fits.
@@ -382,14 +407,16 @@ function fitSheet() {
 window.visualViewport?.addEventListener("resize", fitSheet);
 window.visualViewport?.addEventListener("scroll", fitSheet);
 
-// The launcher rises above the footer when the page reaches it, so that it never covers the
-// footer's link nor the contact buttons above it.
-function followFooter() {
+// The launcher follows the page. It rises above the footer when the page reaches it, so that it
+// never covers the footer's link nor the contact buttons above it. On a phone, it shows its label
+// while the page is at its top, and folds to the dial alone once the visitor scrolls down to read.
+function followPage() {
   const footer = document.querySelector(".foot");
-  if (footer === null) return;
   let frame = 0;
   const lift = () => {
     frame = 0;
+    launcher.classList.toggle("is-folded", window.scrollY > 48);
+    if (footer === null) return;
     const overlap = Math.max(0, window.innerHeight - footer.getBoundingClientRect().top);
     launcher.style.setProperty("--askfolio-lift", `${Math.round(overlap)}px`);
   };
@@ -400,6 +427,77 @@ function followFooter() {
   window.addEventListener("resize", queue);
   lift();
 }
+
+// ─── Topics: the control in the header, the buttons on the page, the suggested questions ──────
+
+/** The topic's name, as the topic control's option writes it in the page's language. */
+function topicName(value) {
+  return [...topic.options].find((option) => option.value === value)?.text ?? value;
+}
+
+/** The invitation and the suggested questions that fit the topic, for the empty conversation. */
+function showStarter() {
+  const kind = scope.startsWith("project:") ? "project" : scope;
+  for (const starter of starters) starter.hidden = starter.dataset.askfolioStarter !== kind;
+}
+
+/**
+ * Switches to the topic `next`. A new topic ends the conversation now, so that coming back to the
+ * previous topic never continues it (the client alone would continue a conversation whose scope
+ * matches again); a log that shows messages gets a divider. A topic button's draft the visitor
+ * left untouched goes with its topic. During a turn, the change waits for the turn's end: the turn
+ * keeps the scope it was sent in.
+ */
+function setTopic(next) {
+  if (turning) {
+    pending = next === scope ? null : next;
+    return;
+  }
+  topic.value = next;
+  if (next === scope) return;
+  scope = next;
+  client.newConversation();
+  showStarter();
+  if (drafted !== null && drafted !== next) {
+    question.value = "";
+    drafted = null;
+    count();
+  }
+  if (log.children.length > 0) {
+    note(TEXT.newTopic(topicName(next)), null, "is-note is-divider"); // announced, like every note
+  }
+}
+
+topic.addEventListener("change", () => setTopic(topic.value));
+
+// A topic button: opens the panel if it is closed, switches the topic, offers its draft (never
+// sent by itself) and moves the focus to the question. The draft goes in an empty field, or
+// replaces a draft the visitor left untouched; what the visitor wrote or chose is kept. The focus
+// coming into the panel asks health again when a notice's time has passed (see recheck).
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("[data-askfolio-scope]");
+  if (button === null || button === undefined || button.hidden) return;
+  opener = button;
+  openPanel(null); // open first, so that a divider is announced from the panel
+  setTopic(button.dataset.askfolioScope);
+  const draft = button.dataset.askfolioDraft;
+  if (draft !== undefined && (question.value === "" || drafted !== null)) {
+    question.value = draft;
+    drafted = button.dataset.askfolioScope;
+    count();
+  }
+  question.focus();
+});
+
+// A suggested question goes into the field, ready to send or to edit; never sent by itself.
+empty.addEventListener("click", (event) => {
+  const suggestion = event.target.closest(".askfolio__suggestion");
+  if (suggestion === null) return;
+  question.value = suggestion.textContent.trim();
+  drafted = null; // the visitor's choice
+  count();
+  question.focus();
+});
 
 // ─── A chat turn ──────────────────────────────────────────────────────────────────────────────
 
@@ -413,7 +511,10 @@ question.addEventListener("focus", async () => {
   else if (result.error.kind !== "aborted" && !turning) fail(result.error, note);
 });
 
-question.addEventListener("input", count);
+question.addEventListener("input", () => {
+  drafted = null; // the visitor's own text now, whatever it says
+  count();
+});
 
 question.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
@@ -439,6 +540,7 @@ form.addEventListener("submit", async (event) => {
   const length = messageLength(asked);
   if (turning || blocked !== null || length === 0 || length > client.limits.maxMessageChars) return;
   question.value = ""; // cleared now: what the visitor types during the turn is kept
+  drafted = null;
   count();
   const sent = bubble("visitor", asked);
   const answer = bubble("assistant");
@@ -491,6 +593,10 @@ form.addEventListener("submit", async (event) => {
       question.value = asked; // back in the input to send again, unless they typed since
       count();
     }
+  }
+  if (pending !== null) {
+    setTopic(pending); // a topic button pressed during the turn
+    pending = null;
   }
   // Stop is hidden again: once the result's state is drawn, the focus goes back to Send, or to
   // the question when a notice disabled Send.

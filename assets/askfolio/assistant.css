@@ -16,7 +16,8 @@
 
 /* A hidden part stays hidden, whatever display the rules below give it. */
 .askfolio [hidden],
-.askfolio-launcher[hidden] {
+.askfolio-launcher[hidden],
+.askfolio-topic[hidden] {
   display: none !important;
 }
 
@@ -109,6 +110,153 @@
 @keyframes askfolio-blink {
   50% {
     opacity: .25;
+  }
+}
+
+/* ---------- Topic buttons on the page ----------
+   Entry points into the radio, in the page's own vocabulary: an underlined link with the dial as
+   its sign, quieter than the filled lamp buttons beside it, or, in the logbook's links column, a
+   dial among the GitHub marks (.gh) with the same tooltip. */
+
+.askfolio-topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 2px 0 0;
+  font: 500 1rem/1.3 var(--sans);
+  letter-spacing: .015em;
+  text-align: left;
+  color: var(--paper);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.askfolio-topic .askfolio-dial {
+  width: 28px;
+  height: 28px;
+}
+
+.askfolio-topic .askfolio-dial__rim {
+  transition: stroke .2s;
+}
+
+.askfolio-topic__text {
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .24em;
+}
+
+.askfolio-topic:hover {
+  color: var(--lamp-soft);
+}
+
+.askfolio-topic:hover .askfolio-topic__text {
+  text-decoration-thickness: 2px;
+}
+
+.askfolio-topic:hover .askfolio-dial__rim,
+.askfolio-topic:focus-visible .askfolio-dial__rim {
+  stroke: var(--lamp);
+}
+
+/* In the logbook: the dial alone, sized and placed like the GitHub mark above it. */
+.askfolio-topic--dial {
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
+.askfolio-topic--dial .askfolio-dial {
+  width: var(--gh-size, 34px);
+  height: var(--gh-size, 34px);
+}
+
+.askfolio-topic--dial:hover .askfolio-dial,
+.askfolio-topic--dial:focus-visible .askfolio-dial {
+  transform: scale(1.16);
+}
+
+@media (hover: none) {
+  .askfolio-topic .tip {
+    display: none;
+  }
+}
+
+/* Under the GitHub mark, its own 44px box: the mark's negative bottom margin (-9px) collapses with
+   this one, leaving 4px between the two boxes, so that no click meant for one lands on the other. */
+.log__links .gh + .askfolio-topic--dial {
+  margin-top: 13px;
+}
+
+/* The stacked logbook puts the links on one row: beside the GitHub mark, the dial keeps a box of
+   its own (4px apart); after the documentation link, it needs the room its negative margin takes. */
+@media (max-width: 899px) {
+  .log__links .gh + .askfolio-topic--dial {
+    margin-top: 0;
+    margin-left: -4px;
+  }
+
+  .log__links .link ~ .askfolio-topic--dial {
+    margin-left: 6px;
+  }
+}
+
+/* No hover on a phone: in the stacked logbook, the tooltip's words are written next to the dial,
+   as the struck GitHub mark writes its reason. */
+@media (hover: none) and (max-width: 899px) {
+  .log td.log__links {
+    flex-wrap: wrap; /* the words may need a line of their own on the narrowest phones */
+  }
+
+  .log__links .askfolio-topic--dial {
+    width: auto;
+    gap: 10px;
+    padding-right: 2px;
+    border-radius: 22px;
+  }
+
+  .log__links .askfolio-topic--dial .tip {
+    position: static;
+    display: inline;
+    max-width: none;
+    padding: 0;
+    font: 500 1rem/1.3 var(--sans);
+    letter-spacing: .015em;
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--lamp);
+    text-decoration-thickness: 1px;
+    text-underline-offset: .24em;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
+  }
+
+  .log__links .askfolio-topic--dial:hover .askfolio-dial {
+    transform: none;
+  }
+}
+
+/* In the background section: under the tagline. On wide screens it takes its room from the space
+   above the stops, so that the stops and their waypoints stay where they are. */
+.askfolio-topic--profile {
+  display: flex;
+  width: fit-content;
+  margin-top: 22px;
+}
+
+@media (min-width: 900px) {
+  .askfolio-topic--profile {
+    margin-bottom: -66px; /* its height and its margin */
   }
 }
 
@@ -254,12 +402,146 @@ html:has(.askfolio:modal) {
   color: var(--moon);
 }
 
+/* The topic: tuned like a station. The select shows the current topic, underlined in lamp light as
+   everything the visitor can touch; its list names the whole portfolio, the background and each
+   project. */
 .askfolio__topic {
-  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 -4px;
   padding-right: 6px;
+}
+
+.askfolio__topic label {
+  flex: none;
   font: 400 .9375rem/1.4 var(--sans);
   letter-spacing: .01em;
   color: var(--moon-dim);
+}
+
+.askfolio__select {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0 0 0 -4px;
+  padding: 0 30px 0 4px;
+  font: 500 .9375rem/1.3 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.25 6 7.75l3.5-3.5' fill='none' stroke='%23f6b94f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 9px center / 12px 12px no-repeat,
+    linear-gradient(rgba(246, 185, 79, .75), rgba(246, 185, 79, .75)) 4px calc(50% + .78em) / calc(100% - 38px) 1px no-repeat;
+  border: 0;
+  border-radius: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.askfolio__select:hover:not(:disabled) {
+  color: var(--lamp-soft);
+  background-size: 12px 12px, calc(100% - 38px) 2px;
+}
+
+.askfolio__select:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+/* A native list (browsers without a customizable select) */
+.askfolio__select option,
+.askfolio__select optgroup {
+  color: var(--moon);
+  background-color: var(--askfolio-case);
+}
+
+/* A customizable select: the list is drawn in the page, as a panel of the radio, the tuned topic
+   marked by a lit lamp. The browser keeps the keyboard and screen-reader behaviour of a select. */
+@supports (appearance: base-select) {
+  .askfolio__select,
+  .askfolio__select::picker(select) {
+    appearance: base-select;
+  }
+
+  .askfolio__select {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .askfolio__select::picker-icon {
+    display: none;
+  }
+
+  .askfolio__select::picker(select) {
+    min-width: 16.5rem;
+    max-height: min(26rem, 70dvh);
+    margin-block: 4px;
+    padding: 6px 0;
+    color: var(--moon);
+    background: linear-gradient(180deg, #102358, var(--askfolio-case)), var(--askfolio-case);
+    border: 1px solid var(--askfolio-line);
+    border-radius: 12px;
+    box-shadow: 0 24px 56px -18px rgba(0, 0, 0, .9), 0 0 44px -26px rgba(246, 185, 79, .6);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(169, 187, 220, .3) transparent;
+  }
+
+  .askfolio__select option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 18px 0 16px;
+    font: 400 1rem/1.3 var(--sans);
+    letter-spacing: .01em;
+    color: var(--moon);
+    background: none;
+    cursor: pointer;
+  }
+
+  .askfolio__select option:hover,
+  .askfolio__select option:focus-visible {
+    color: var(--paper);
+    background: rgba(246, 185, 79, .1);
+    outline: none;
+  }
+
+  .askfolio__select option:checked {
+    color: var(--paper);
+  }
+
+  .askfolio__select option::checkmark {
+    content: '';
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--lamp);
+    box-shadow: 0 0 6px 1px rgba(246, 185, 79, .7);
+  }
+
+  /* The group's label is drawn by the browser from its own font, with the group's padding. */
+  .askfolio__select optgroup {
+    margin-top: 6px;
+    padding: 10px 16px 0 35px; /* the label over the options' text, after their lamp */
+    font: 500 .875rem/1.6 var(--sans);
+    letter-spacing: .03em;
+    color: var(--haze);
+    background: none;
+    border-top: 1px solid rgba(132, 162, 222, .16);
+  }
+
+  .askfolio__select optgroup option {
+    margin-inline: -35px -16px;
+  }
+
+  .askfolio__select option:not(:checked)::checkmark {
+    visibility: hidden;
+  }
 }
 
 /* The tuning scale: minor and major ticks rising from a baseline, like the dial's tick ring
@@ -376,15 +658,70 @@ html:has(.askfolio:modal) {
   display: none;
 }
 
-/* An empty conversation invites a question. */
+/* Without messages, the body is as tall as the invitation and its suggestions: on a short panel,
+   .askfolio__main scrolls instead of letting them run under the question. */
+.askfolio__body:has(> .askfolio__log:empty) {
+  min-height: auto;
+}
+
+/* An empty conversation invites a question, and suggests two or three that fit the topic. */
 .askfolio__empty {
   display: flex;
-  flex: 1;
-  align-items: flex-end;
-  padding: 24px 20px 22px;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 20px 14px;
+}
+
+.askfolio__invite {
   font: italic 300 1.375rem/1.3 var(--serif);
   color: var(--paper);
   text-wrap: balance;
+}
+
+.askfolio__suggestions {
+  margin-top: 12px;
+}
+
+/* A suggestion: a quiet line of text marked like the page's lists, not a button to press first. */
+.askfolio__suggestion {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 0 10px 26px;
+  font: 400 1rem/1.4 var(--sans);
+  letter-spacing: .01em;
+  text-align: left;
+  color: var(--moon);
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.askfolio__suggestion::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: calc(10px + .7em - 1px);
+  width: 12px;
+  height: 1.5px;
+  background: var(--lamp);
+  opacity: .85;
+}
+
+/* Only with a real pointer: a tap that opened the panel must not leave a suggestion lit. */
+@media (hover: hover) {
+  .askfolio__suggestion:hover {
+    color: var(--lamp-soft);
+    text-decoration: underline;
+    text-decoration-color: var(--lamp);
+    text-decoration-thickness: 1px;
+    text-underline-offset: .24em;
+  }
 }
 
 .askfolio__log:not(:empty) + .askfolio__empty {
@@ -449,6 +786,23 @@ html:has(.askfolio:modal) {
   width: 9px;
   height: 1.5px;
   background: var(--haze);
+}
+
+/* A new topic: a rule across the log, marked by the tuning scale's needle, and the new topic. */
+.askfolio__log .is-divider {
+  margin-top: 30px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--askfolio-line);
+}
+
+.askfolio__log .is-divider::before {
+  left: 0;
+  top: -9px;
+  width: 2px;
+  height: 9px;
+  border-radius: 1px;
+  background: var(--lamp);
+  box-shadow: 0 0 6px rgba(246, 185, 79, .7);
 }
 
 .askfolio__log > :first-child {
@@ -945,25 +1299,37 @@ html:has(.askfolio:modal) {
   }
 
   .askfolio__empty {
-    padding-block: 14px;
+    padding-block: 14px 8px;
+  }
+
+  .askfolio__invite {
     font-size: 1.1875rem;
   }
 }
 
-/* ---------- Narrow screens: the launcher keeps its instrument, its label is read only ---------- */
+/* ---------- Narrow screens: the launcher says what it is at the top of the page, then folds to
+   its instrument once the visitor scrolls down to read; its label is still read then ---------- */
 
 @media (max-width: 559px) {
   .askfolio-launcher {
-    padding: 7px;
+    transition: border-color .2s, box-shadow .2s, color .2s, padding .3s ease, gap .3s ease;
   }
 
   .askfolio-launcher__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
+    max-width: 15em;
     overflow: hidden;
-    clip-path: inset(50%);
     white-space: nowrap;
+    transition: max-width .3s ease, opacity .2s;
+  }
+
+  .askfolio-launcher.is-folded {
+    gap: 0;
+    padding: 7px;
+  }
+
+  .askfolio-launcher.is-folded .askfolio-launcher__label {
+    max-width: 0;
+    opacity: 0;
   }
 }
 
@@ -971,6 +1337,9 @@ html:has(.askfolio:modal) {
 
 @media (prefers-reduced-motion: reduce) {
   .askfolio-launcher,
+  .askfolio-launcher *,
+  .askfolio-topic,
+  .askfolio-topic *,
   .askfolio,
   .askfolio *,
   .askfolio *::before {
@@ -1016,10 +1385,15 @@ html:has(.askfolio:modal) {
   .askfolio__question:focus {
     outline: 2px solid Highlight;
   }
+
+  .askfolio__select {
+    border: 1px solid ButtonText;
+  }
 }
 
 @media print {
   .askfolio-launcher,
+  .askfolio-topic,
   .askfolio {
     display: none !important;
   }
