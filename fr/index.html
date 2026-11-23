@@ -1,382 +1,379 @@
-<!-- 
-  Hello 😊.
-
-  This template is designed and developed by Nisar Hassan Naqvi
-  for anyone to use for free or customize the way they like.
-
-  Github Repo: https://github.com/nisarhassan12/portfolio-template/
-  My Website: https://nisar.dev
-
-  For business & inquires, contact me => syednisarhassan12@gmail.com
--->
-
-<!--
-  Follow the instructions written in comments to create your stunning portfolio
--->
-
 <!DOCTYPE html>
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="shortcut icon" type="image/jpeg" href="../assets/images/favicon.jpg" />
-
-  <!-- Put your site title here -->
-  <title>
-    Adrien MAISAK - Développeur d’application
-  </title>
-
-  <meta name="description" content="Développeur d’application basé à Toulouse, backend dans l’âme. À la recherche de nouvelles opportunités.">
-  <!-- Add some coding keywords below, Ex: (React, CSS etc) -->
-  <meta name="keywords" content="développeur d’application, backend, Python, FastAPI, TypeScript, Node.js, Fastify, PostgreSQL, Redis, Next.js, React, agents de codage IA, Toulouse" />
-  <link rel="canonical" href="https://dayrisea.github.io/fr/" />
-  <link rel="alternate" hreflang="en" href="https://dayrisea.github.io/" />
-  <link rel="alternate" hreflang="fr" href="https://dayrisea.github.io/fr/" />
-  <link rel="alternate" hreflang="x-default" href="https://dayrisea.github.io/" />
-  <link rel="stylesheet" href="../index.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adrien Maisak, développeur d’application à Toulouse</title>
+  <meta name="description" content="Adrien Maisak, développeur d’application à Toulouse, backend dans l’âme. Ouvert à de nouvelles opportunités.">
+  <meta name="keywords" content="développeur d’application, backend, Python, FastAPI, TypeScript, Node.js, Fastify, PostgreSQL, Redis, Next.js, React, agents de code IA, Toulouse">
+  <meta name="author" content="Adrien Maisak">
+  <meta name="theme-color" content="#0a153b">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://dayrisea.github.io/fr/">
+  <link rel="alternate" hreflang="en" href="https://dayrisea.github.io/">
+  <link rel="alternate" hreflang="fr" href="https://dayrisea.github.io/fr/">
+  <link rel="alternate" hreflang="x-default" href="https://dayrisea.github.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dayrisea.github.io/fr/">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Adrien Maisak, développeur d’application à Toulouse">
+  <meta property="og:description" content="Adrien Maisak, développeur d’application à Toulouse, backend dans l’âme. Ouvert à de nouvelles opportunités.">
+  <meta property="og:image" content="https://dayrisea.github.io/assets/images/og-fr.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="apple-touch-icon" href="../assets/images/apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/spectral-300.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../index.css">
+  <script type="application/ld+json">
+    {"@context": "https://schema.org", "@type": "Person", "name": "Adrien Maisak", "alternateName": "DayriseA", "jobTitle": "Développeur d’application", "url": "https://dayrisea.github.io/fr/", "address": {"@type": "PostalAddress", "addressLocality": "Toulouse", "addressCountry": "FR"}, "sameAs": ["https://github.com/DayriseA", "https://www.linkedin.com/in/adrien-maisak/"]}
+  </script>
 </head>
 
 <body>
+  <a class="skip" href="#main">Aller au contenu</a>
 
-  <!-- ***** Header ***** -->
-
-  <header class="header" role="banner" id="top">
-    <div class="row">
-      <nav class="nav" role="navigation">
-        <ul class="nav__items">
-          <li class="nav__item">
-            <a href="#about" class="nav__link">À&nbsp;propos</a>
-          </li>
-          <li class="nav__item"><a href="#work" class="nav__link">Projets</a></li>
-          <li class="nav__item">
-            <a href="#contact" class="nav__link">Contact</a>
-          </li>
-          <li class="nav__item nav__item--lang">
-            <div class="nav__lang" role="group" aria-label="Langue">
-              <svg class="nav__lang-icon" aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="12" r="9.25" />
-                <ellipse cx="12" cy="12" rx="4" ry="9.25" />
-                <path d="M2.75 12h18.5" />
-              </svg>
-              <a href="../" class="nav__link nav__lang-link" hreflang="en" lang="en">EN<span class="visually-hidden">, English</span></a>
-              <span class="nav__lang-sep" aria-hidden="true">|</span>
-              <a href="./" class="nav__link nav__lang-link" hreflang="fr" lang="fr" aria-current="page">FR<span class="visually-hidden">, Français</span></a>
-            </div>
-          </li>
-        </ul>
-      </nav>
-    </div>
-    <div class="header__text-box row">
-      <div class="header__text">
-        <h1 class="heading-primary">
-          <!-- Replace the following name with your name -->
-          <span>Adrien MAISAK</span>
-        </h1>
-        <!-- Put a small paragraph about yourself -->
-        <p>Développeur d’application, backend&nbsp;dans&nbsp;l’âme.<br>À la recherche de nouvelles&nbsp;opportunités.</p>
-        <a href="#contact" class="btn btn--pink">Me contacter</a>
-      </div>
+  <header class="bar">
+    <a class="bar__brand" href="#top" aria-label="DayriseA, retour en haut">
+      <svg class="bar__compass" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+        <circle cx="20" cy="20" r="18.5" class="mini__rim"/>
+        <circle cx="20" cy="20" r="14.5" pathLength="360" class="mini__ticks"/>
+        <g class="needle" transform="rotate(205 20 20)">
+          <path d="M20 5.5l3.2 13.6L20 21.5l-3.2-2.4z" class="mini__tip"/>
+          <path d="M20 21.5V32" class="mini__tail"/>
+        </g>
+        <circle cx="20" cy="20" r="1.8" class="mini__hub"/>
+      </svg>
+      <span>DayriseA</span>
+    </a>
+    <nav class="bar__nav" aria-label="Principale">
+      <a href="#parcours" class="bar__opt bar__opt--wide">Parcours</a>
+      <a href="#projets">Projets</a>
+      <a href="#contact">Contact</a>
+      <a href="../assets/cv/CV_AMK_FR.pdf">CV</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Langue">
+      <a href="../" hreflang="en" lang="en">EN<span class="vh">, English</span></a>
+      <span aria-hidden="true">/</span>
+      <a href="./" hreflang="fr" lang="fr" aria-current="page">FR<span class="vh">, Français</span></a>
     </div>
   </header>
 
-  <main role="main">
+  <main id="main">
 
-    <!-- ***** About ***** -->
+    <section class="hero" id="top">
+      <div class="sky" aria-hidden="true">
+        <div class="sky__stars"></div>
+        <div class="sky__clouds sky__clouds--far"></div>
+        <div class="sky__clouds sky__clouds--mid"></div>
+        <div class="sky__clouds sky__clouds--near"></div>
+        <div class="sky__glow"></div>
+      </div>
 
-    <section class="about" id="about">
-      <div class="row">
-        <h2>À propos de moi</h2>
-        <div class="about__content">
-          <div class="about__text">
-            <!-- Replace the below paragraph with info about yourself -->
-            <p>
-              Je suis développeur d’application, basé à Toulouse. Depuis un an, je développe en freelance
-              des applications web full-stack, avec un faible pour le backend. Auparavant, j’ai passé
-              sept ans sur des postes liés à la donnée produit et à l’informatique, qui m’ont appris l’importance
-              de données propres et d’outils qui rendent vraiment service à ceux qui les utilisent.
-            </p>
-            <p>
-              Par curiosité, j’ai testé l’IA tôt, mais les promesses dépassaient les résultats&nbsp;: je suis resté
-              sceptique, sans jamais cesser d’essayer chaque nouvelle version. Une fois l’IA vraiment au point, je m’y
-              suis mis à fond. Aujourd’hui, je travaille en tandem avec des agents de codage IA, de façon réfléchie
-              et responsable&nbsp;: l’IA est un outil que je pilote, pas un pilote&nbsp;automatique.
-            </p>
-            <p>
-              Je suis désormais à la recherche d’une nouvelle opportunité où je pourrai continuer à progresser aux côtés d’une équipe expérimentée.
-            </p>
-            <!-- Provide a link to your resume -->
-            <a href="../assets/cv/CV_AMK_FR.pdf" class="btn">Mon CV</a>
-          </div>
-
-          <div class="about__photo-container">
-            <!-- Add a nice photo of yourself -->
-            <img class="about__photo" src="../assets/images/my-photo-grey.jpg" alt="" />
+      <div class="wrap hero__in">
+        <div class="hero__text">
+          <h1>Adrien <span>Maisak</span></h1>
+          <p class="hero__role">Développeur d’application à Toulouse, backend&nbsp;dans&nbsp;l’âme.</p>
+          <p class="status">Ouvert à de nouvelles opportunités</p>
+          <p class="hero__pitch">Un an de freelance en full-stack, après sept ans dans la donnée produit et l’IT. Je travaille main dans la main avec des agents de code IA, sans lâcher les&nbsp;commandes.</p>
+          <div class="actions">
+            <a class="btn btn--lamp" href="../assets/cv/CV_AMK_FR.pdf" download>
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.5v8.2M4.4 6.6 8 10.2l3.6-3.6M2.5 13.5h11"/></svg>
+              Télécharger mon CV
+            </a>
+            <a class="btn btn--line" href="#projets">Voir les projets</a>
+            <a class="link" href="mailto:adrien.maisak@gmail.com">M’écrire</a>
           </div>
         </div>
+
+        <figure class="instrument">
+          <svg class="dial" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="dial-face" cx=".34" cy=".26" r=".9">
+                <stop offset="0" stop-color="#25407f"/>
+                <stop offset=".55" stop-color="#11235a"/>
+                <stop offset="1" stop-color="#0a153b"/>
+              </radialGradient>
+              <radialGradient id="dial-lamp" cx=".3" cy=".2" r=".75">
+                <stop offset="0" stop-color="#f6b94f" stop-opacity=".34"/>
+                <stop offset=".6" stop-color="#f6b94f" stop-opacity=".07"/>
+                <stop offset="1" stop-color="#f6b94f" stop-opacity="0"/>
+              </radialGradient>
+              <g id="rose-main">
+                <path d="M200 200V104l-11 85z" class="rose__lit"/>
+                <path d="M200 200V104l11 85z" class="rose__dark"/>
+              </g>
+              <g id="rose-minor">
+                <path d="M200 200v-58l-7 51z" class="rose__lit"/>
+                <path d="M200 200v-58l7 51z" class="rose__dark"/>
+              </g>
+            </defs>
+            <circle cx="200" cy="200" r="197" class="dial__rim"/>
+            <circle cx="200" cy="200" r="189" fill="url(#dial-face)"/>
+            <circle cx="200" cy="200" r="189" fill="url(#dial-lamp)" class="dial__lamp"/>
+            <circle cx="200" cy="200" r="189" class="dial__inner"/>
+            <circle cx="200" cy="200" r="177" pathLength="360" class="tick tick--5"/>
+            <circle cx="200" cy="200" r="175" pathLength="360" class="tick tick--10"/>
+            <circle cx="200" cy="200" r="172.5" pathLength="360" class="tick tick--30"/>
+            <g class="dial__nums">
+              <text x="200" y="68" class="card">N</text>
+              <text x="200" y="64" transform="rotate(30 200 200)">3</text>
+              <text x="200" y="64" transform="rotate(60 200 200)">6</text>
+              <text x="200" y="68" transform="rotate(90 200 200)" class="card">E</text>
+              <text x="200" y="64" transform="rotate(120 200 200)">12</text>
+              <text x="200" y="64" transform="rotate(150 200 200)">15</text>
+              <text x="200" y="68" transform="rotate(180 200 200)" class="card">S</text>
+              <text x="200" y="64" transform="rotate(210 200 200)">21</text>
+              <text x="200" y="64" transform="rotate(240 200 200)">24</text>
+              <text x="200" y="68" transform="rotate(270 200 200)" class="card">O</text>
+              <text x="200" y="64" transform="rotate(300 200 200)">30</text>
+              <text x="200" y="64" transform="rotate(330 200 200)">33</text>
+            </g>
+            <circle cx="200" cy="200" r="112" class="dial__ring"/>
+            <g class="rose">
+              <use href="#rose-minor" transform="rotate(45 200 200)"/>
+              <use href="#rose-minor" transform="rotate(135 200 200)"/>
+              <use href="#rose-minor" transform="rotate(225 200 200)"/>
+              <use href="#rose-minor" transform="rotate(315 200 200)"/>
+              <use href="#rose-main"/>
+              <use href="#rose-main" transform="rotate(90 200 200)"/>
+              <use href="#rose-main" transform="rotate(180 200 200)"/>
+              <use href="#rose-main" transform="rotate(270 200 200)"/>
+            </g>
+            <g class="needle" transform="rotate(205 200 200)">
+              <path d="M200 74l8.5 122-8.5 8-8.5-8z" class="needle__tip"/>
+              <path d="M200 204v78" class="needle__tail"/>
+              <circle cx="200" cy="290" r="7" class="needle__weight"/>
+            </g>
+            <circle cx="200" cy="200" r="9" class="dial__hub"/>
+            <circle cx="200" cy="200" r="3" class="dial__pin"/>
+          </svg>
+          <figcaption class="placard">
+            <p class="placard__quote">«&nbsp;L’IA est un outil que je pilote, pas un pilote&nbsp;automatique.&nbsp;»</p>
+          </figcaption>
+        </figure>
       </div>
+
+      <p class="origin"><i class="wp wp--ring" data-pt></i>Toulouse <span>43°36′N 1°26′E</span></p>
     </section>
-    
 
-    <!-- ***** Work ***** -->
+    <svg class="route" aria-hidden="true" focusable="false">
+      <path class="route__plan"/>
+      <path class="route__dest"/>
+      <path class="route__flown"/>
+      <g class="route__craft"><circle r="13" class="route__halo"/><circle r="3.6" class="route__light"/></g>
+    </svg>
 
-    <section class="work" id="work">
-      <div class="row">
-        <h2>Mes réalisations</h2>
-        <div class="work__boxes">
+    <div class="chart">
 
-          <!-- Each div with the work__box class is a project. -->
+      <section class="leg wrap" id="parcours">
+        <header class="leg__head leg__head--offset">
+          <h2>La route jusqu’ici</h2>
+          <p>La prochaine étape reste à&nbsp;tracer.</p>
+        </header>
+        <ol class="stops">
+          <li class="stop">
+            <i class="wp wp--tri" data-pt></i>
+            <h3>Donnée produit et IT</h3>
+            <p class="stop__when">sept ans</p>
+            <p>Administrateur CMDB, puis responsable PIM/DAM&nbsp;: sept ans à collecter, fiabiliser et diffuser de la donnée. J’en garde le goût des données propres et des outils qui rendent vraiment service à ceux qui les utilisent.</p>
+          </li>
+          <li class="stop">
+            <i class="wp wp--tri" data-pt></i>
+            <h3>Reconversion</h3>
+            <p class="stop__when">2023 à 2024</p>
+            <p>Le parcours de développeur d’application Python d’OpenClassrooms (titre RNCP de niveau&nbsp;6)&nbsp;: API, tests, sécurité, CI/CD, appris projet après&nbsp;projet.</p>
+          </li>
+          <li class="stop">
+            <i class="wp wp--tri" data-pt></i>
+            <i class="turn turn--east" data-pt="turn"></i>
+            <h3>Freelance</h3>
+            <p class="stop__when">depuis 2025</p>
+            <p>Un an à concevoir et livrer des applications web full-stack, avec un faible pour le backend&nbsp;: une mission principale, et des projets personnels pour explorer de nouvelles technologies.</p>
+          </li>
+        </ol>
+      </section>
 
-          <div class="work__box">
-            <div class="work__text">
-              <h3>Checkout Surge</h3>
-              <p>
-                Une vente flash simulée&nbsp;: 10&nbsp;000 acheteurs virtuels se ruent au même instant sur 500&nbsp;articles.
-                Ce qui m’intéressait, c’était la conception du système lui-même.
-              </p>
-              <ul class="work__list">
-                <li>Ne jamais vendre un article qui n’existe pas, même en cas de clics répétés</li>
-                <li>Éviter de submerger un back-office volontairement lent</li>
-                <li>Suivre chaque test en direct sur un tableau de bord temps réel</li>
-                <li>Comparer côte à côte des choix de conception, mesures à l’appui</li>
-              </ul>
-              <p>
-                Lancez un vrai test de charge et suivez-le en direct. La démo se met en veille en cas d’inactivité&nbsp;: comptez quelques secondes pour qu’elle se réveille.
-              </p>
+      <section class="leg wrap helm" id="ia">
+        <figure class="helm__photo">
+          <img src="../assets/images/adrien-night-1033.webp"
+               srcset="../assets/images/adrien-night-640.webp 640w, ../assets/images/adrien-night-1033.webp 1033w"
+               sizes="(min-width: 960px) 44vw, 100vw" width="1033" height="629" loading="lazy" decoding="async"
+               alt="Adrien, de dos, face à une mer de nuages.">
+        </figure>
+        <div class="helm__text">
+          <h2>Aux commandes</h2>
+          <p>Par curiosité, j’ai testé l’IA très tôt. Les promesses dépassaient alors les résultats&nbsp;: je suis resté sceptique, sans jamais cesser d’essayer chaque nouvelle version. Quand elle est devenue réellement capable, je m’y suis mis à&nbsp;fond.</p>
+          <p>Aujourd’hui, je travaille en tandem avec des agents de code IA, de façon réfléchie et responsable. Eux apportent la puissance&nbsp;; le cap, c’est moi qui le tiens. Concrètement, cela veut dire&nbsp;:</p>
+          <ul class="ticks">
+            <li>rédiger les specs de tâches et les garde-fous,</li>
+            <li>créer des skills et des boucles de revue,</li>
+            <li>arbitrer les revues de code.</li>
+          </ul>
+        </div>
+      </section>
 
-              <div class="work__links">
-                <a href="https://checkout-surge-gate.fly.dev/" target="_blank" class="link__text">
-                  Essayer
-                </a>
-                <a href="https://github.com/DayriseA/checkout-surge" title="Voir le code source" target="_blank">
-                  <img src="../assets/images/github.svg" class="work__code" alt="GitHub">
-                </a>
-              </div>
-            </div>
-            <div class="work__techs">
-              <h4>Stack technique</h4>
-              <ul class="work__list">
-                <li>TypeScript / Node.js / Fastify</li>
-                <li>Redis / BullMQ</li>
-                <li>PostgreSQL</li>
-                <li>Next.js / React</li>
-                <li>k6</li>
-                <li>Docker / Fly.io</li>
-              </ul>
-            </div>
-          </div>
+      <section class="leg wrap" id="projets">
+        <header class="leg__head leg__head--projects">
+          <h2>Projets</h2>
+          <i class="turn turn--west" data-pt="turn"></i>
+        </header>
 
-          <div class="work__box">
-            <div class="work__text">
-              <h3>Coach IA pour réseaux&nbsp;sociaux</h3>
-              <p>
-                L’idée&nbsp;: les entrepreneurs connectent leurs comptes Facebook et Instagram, décrivent leur activité
-                et bénéficient d’un coaching par IA fondé sur leurs propres données.
-              </p>
-              <ul class="work__list">
-                <li>Publier, programmer et analyser des posts sur les deux plateformes</li>
-                <li>Transformer les données de chacun en un plan de coaching aux étapes concrètes</li>
-                <li>Entretenir la motivation des utilisateurs avec des quêtes, des séries et des récompenses</li>
-                <li>Gérer plusieurs entreprises et des membres d’équipe aux rôles distincts</li>
-              </ul>
-
-              <div class="work__links">
-                <span class="work__private" tabindex="0">
-                  <img src="../assets/images/github.svg" class="work__code" alt="Code source non public">
-                  <span class="work__tooltip" role="tooltip">
-                    Projet freelance&nbsp;: le code appartient&nbsp;au&nbsp;client.
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div class="work__techs">
-              <h4>Stack technique</h4>
-              <ul class="work__list">
-                <li>Python / FastAPI</li>
-                <li>PostgreSQL / SQLAlchemy</li>
-                <li>Next.js / React / TypeScript</li>
-                <li>OpenAI API</li>
-                <li>Meta Graph API</li>
-                <li>Docker / Render / Vercel</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="work__box">
-            <div class="work__text">
-              <h3>OC Lettings <span class="work__tag">Projet de formation</span></h3>
-              <p>
-                Ce projet consistait à reprendre un code existant en mauvais état et à l’améliorer&nbsp;:
-              </p>
-              <ul class="work__list">
-                <li>Refondre la structure modulaire (découpage en applications, etc.)</li>
-                <li>Réduire la dette technique (linting, tests, gestion des erreurs, etc.)</li>
-                <li>Configurer le logging, installer et configurer Sentry pour le suivi des erreurs</li>
-                <li>Ajouter un pipeline CI/CD</li>
-                <li>Rédiger la documentation et l’héberger sur ReadTheDocs</li>
-              </ul>
-
-              <div class="work__links">
-                <a href="https://amk-oc-lettings.readthedocs.io/en/latest/" target="_blank" class="link__text">
-                  Voir la doc
-                </a>
-                <a href="https://github.com/DayriseA/OCP13_OC-Lettings-FR" title="Voir le code source" target="_blank">
-                  <img src="../assets/images/github.svg" class="work__code" alt="GitHub">
-                </a>
-              </div>
-            </div>
-            <div class="work__techs">
-              <h4>Stack technique</h4>
-              <ul class="work__list">
-                <li>Python / Django</li>
-                <li>Postgres</li>
-                <li>Sentry</li>
-                <li>Docker / Docker Hub</li>
-                <li>GitHub Actions</li>
-                <li>Render</li>
-                <li>Sphinx / ReadTheDocs</li>
-              </ul>
+        <article class="project project--lead">
+          <i class="turn turn--lane" data-pt="turn"></i>
+          <i class="wp wp--ring" data-pt></i>
+          <div class="project__body">
+            <p class="kind">Projet personnel, démo en ligne</p>
+            <h3>Checkout Surge</h3>
+            <p class="project__lede">10&nbsp;000 acheteurs virtuels, 500&nbsp;articles, aucune&nbsp;survente.</p>
+            <p>Une vente flash simulée, où tout le monde se rue au même instant. Ce qui m’intéressait, c’était la conception du système lui-même.</p>
+            <ul class="ticks">
+              <li>Ne jamais vendre un article qui n’existe pas, même en cas de clics répétés</li>
+              <li>Éviter de submerger un back-office volontairement lent</li>
+              <li>Suivre chaque test en direct sur un tableau de bord temps réel</li>
+              <li>Comparer côte à côte des choix de conception, mesures à l’appui</li>
+            </ul>
+            <p>Sous le capot&nbsp;: un pipeline de commandes asynchrone et idempotent, un circuit breaker, un tableau de bord en SSE et l’orchestration des tests de charge&nbsp;k6.</p>
+            <p class="project__note">Lancez un vrai test de charge et suivez-le en direct. La démo se met en veille quand personne ne l’utilise&nbsp;: comptez quelques secondes pour qu’elle se&nbsp;réveille.</p>
+            <div class="actions">
+              <a class="btn btn--lamp" href="https://checkout-surge-gate.fly.dev/" target="_blank" rel="noopener">Lancer la démo</a>
+              <a class="gh" href="https://github.com/DayriseA/checkout-surge" target="_blank" rel="noopener" aria-label="Code source de Checkout Surge sur GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/></svg><span class="tip" aria-hidden="true">Voir le code source</span></a>
             </div>
           </div>
+          <aside class="stack">
+            <h4>Stack</h4>
+            <ul>
+              <li>TypeScript / Node.js / Fastify</li>
+              <li>Redis / BullMQ</li>
+              <li>PostgreSQL</li>
+              <li>Next.js / React</li>
+              <li>k6</li>
+              <li>Docker / Fly.io</li>
+            </ul>
+          </aside>
+        </article>
 
-          <div class="work__box">
-            <div class="work__text">
-              <h3>EpicEvents CRM <span class="work__tag">Projet de formation</span></h3>
-              <p>
-                Une application CLI pour un CRM simple. Mise en place d’une base de données sécurisée avec Python et SQL.
-                L’application permet de gérer les employés, les clients, les contrats et les événements d’une organisation.
-              </p>
-
-              <div class="work__links">
-                <a href="https://github.com/DayriseA/OCP12_CRM_EpicEvents">
-                  <img src="../assets/images/github.svg" class="work__code" title="Voir le code source" alt="GitHub">
-                </a>
-              </div>
-            </div>
-            <div class="work__techs">
-              <h4>Stack technique</h4>
-              <ul class="work__list">
-                <li>Python</li>
-                <li>SQLAlchemy / Alembic</li>
-                <li>Click / Rich</li>
-                <li>Argon2 / cryptography / pyjwt</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="work__box">
-            <div class="work__text">
-              <h3>Gudlift registration <span class="work__tag">Projet de formation</span></h3>
-              <p>
-                Ici, l’objectif était de contribuer à un projet existant en ajoutant différents tests,
-                en gérant les erreurs et en corrigeant des bugs.
-              </p>
-
-              <div class="work__links">
-                <a href="https://github.com/DayriseA/OCP11_Python_Testing/tree/qa">
-                  <img src="../assets/images/github.svg" class="work__code" title="Voir le code source" alt="GitHub">
-                </a>
-              </div>
-            </div>
-            <div class="work__techs">
-              <h4>Stack technique</h4>
-              <ul class="work__list">
-                <li>Python / Flask</li>
-                <li>Pytest / coverage</li>
-                <li>Locust</li>
-                <li>Selenium</li>
-              </ul>
+        <article class="project">
+          <i class="wp wp--ring" data-pt></i>
+          <div class="project__body">
+            <p class="kind">Mission freelance</p>
+            <h3>Coach IA pour réseaux&nbsp;sociaux</h3>
+            <p>Les entrepreneurs connectent leurs comptes Facebook et Instagram, décrivent leur activité et reçoivent un coaching par IA fondé sur leurs propres&nbsp;données.</p>
+            <ul class="ticks">
+              <li>Publier, programmer et analyser des posts sur les deux plateformes</li>
+              <li>Transformer les données de chacun en un plan de coaching aux étapes concrètes</li>
+              <li>Entretenir la motivation avec des quêtes, des séries et des récompenses</li>
+              <li>Gérer plusieurs entreprises et des membres d’équipe aux rôles distincts</li>
+            </ul>
+            <p>Sous le capot&nbsp;: un backend FastAPI asynchrone, un coach LLM à sorties structurées, une authentification JWT, le chiffrement au repos et une suppression des données conforme aux exigences de Meta et du&nbsp;RGPD.</p>
+            <div class="actions">
+              <span class="gh gh--private" tabindex="0" role="img" aria-label="Code source non public" aria-describedby="private-note"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="gh__mark" d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/><path class="gh__bar gh__bar--under" d="M1.5 1.5l13 13"/><path class="gh__bar" d="M1.5 1.5l13 13"/></svg><span class="tip" role="tooltip" id="private-note">Projet freelance&nbsp;: le code appartient au&nbsp;client.</span></span>
             </div>
           </div>
+          <aside class="stack">
+            <h4>Stack</h4>
+            <ul>
+              <li>Python / FastAPI</li>
+              <li>PostgreSQL / SQLAlchemy</li>
+              <li>Next.js / React / TypeScript</li>
+              <li>OpenAI API</li>
+              <li>Meta Graph API</li>
+              <li>Docker / Render / Vercel</li>
+            </ul>
+          </aside>
+        </article>
 
-          <div class="work__box">
-            <div class="work__text">
-              <h3>SoftDesk-API <span class="work__tag">Projet de formation</span></h3>
-              <p>
-                Dans ce projet, j’ai créé une API RESTful avec Django REST. C’était aussi une belle
-                introduction aux standards de sécurité et de protection des données, comme l’OWASP et le RGPD, ainsi qu’aux
-                bonnes pratiques d’écoconception logicielle.
-              </p>
+        <article class="project project--log">
+          <i class="wp wp--ring" data-pt></i>
+          <div class="project__body">
+            <h3>Projets de formation</h3>
+            <p>Les quatre derniers projets du parcours OpenClassrooms, du plus récent au plus ancien&nbsp;:</p>
+          </div>
+          <table class="log" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">N°</th>
+                <th scope="col" role="columnheader">Projet</th>
+                <th scope="col" role="columnheader">Stack</th>
+                <th scope="col" role="columnheader">Liens</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              <tr role="row">
+                <td class="log__no" role="cell">P13</td>
+                <th scope="row" role="rowheader"><span class="log__name">OC Lettings</span>La reprise d’un projet Django en mauvais état&nbsp;: structure modulaire refondue, dette technique réduite (linting, tests, gestion des erreurs), logging et Sentry en place, pipeline CI/CD ajouté, documentation hébergée sur ReadTheDocs.</th>
+                <td class="log__stack" role="cell">Python / Django, Postgres, Sentry, Docker / Docker Hub, GitHub Actions, Render, Sphinx / ReadTheDocs</td>
+                <td class="log__links" role="cell">
+                  <a class="link link--out" href="https://amk-oc-lettings.readthedocs.io/en/latest/" target="_blank" rel="noopener" aria-label="Documentation de OC Lettings">Doc<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.75 9.25l6.5-6.5M4 2.75h5.25V8"/></svg></a>
+                  <a class="gh" href="https://github.com/DayriseA/OCP13_OC-Lettings-FR" target="_blank" rel="noopener" aria-label="Code source de OC Lettings sur GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/></svg><span class="tip" aria-hidden="true">Voir le code source</span></a>
+                </td>
+              </tr>
+              <tr role="row">
+                <td class="log__no" role="cell">P12</td>
+                <th scope="row" role="rowheader"><span class="log__name">EpicEvents CRM</span>Un CRM en ligne de commande adossé à une base de données sécurisée, en Python et SQL, pour gérer les employés, les clients, les contrats et les événements d’une organisation.</th>
+                <td class="log__stack" role="cell">Python, SQLAlchemy / Alembic, Click / Rich, Argon2 / cryptography / pyjwt</td>
+                <td class="log__links" role="cell">
+                  <a class="gh" href="https://github.com/DayriseA/OCP12_CRM_EpicEvents" target="_blank" rel="noopener" aria-label="Code source de EpicEvents CRM sur GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/></svg><span class="tip" aria-hidden="true">Voir le code source</span></a>
+                </td>
+              </tr>
+              <tr role="row">
+                <td class="log__no" role="cell">P11</td>
+                <th scope="row" role="rowheader"><span class="log__name">Gudlift registration</span>Une contribution à un projet existant&nbsp;: ajout de tests, gestion des erreurs et correction de bugs.</th>
+                <td class="log__stack" role="cell">Python / Flask, Pytest / coverage, Locust, Selenium</td>
+                <td class="log__links" role="cell">
+                  <a class="gh" href="https://github.com/DayriseA/OCP11_Python_Testing/tree/qa" target="_blank" rel="noopener" aria-label="Code source de Gudlift registration sur GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/></svg><span class="tip" aria-hidden="true">Voir le code source</span></a>
+                </td>
+              </tr>
+              <tr role="row">
+                <td class="log__no" role="cell">P10</td>
+                <th scope="row" role="rowheader"><span class="log__name">SoftDesk-API</span>Une API RESTful avec Django REST Framework, et une belle introduction aux standards de sécurité et de protection des données (OWASP, RGPD) ainsi qu’aux bonnes pratiques d’écoconception logicielle.</th>
+                <td class="log__stack" role="cell">Python, Django, Django REST Framework, JSON Web Token (JWT), Postman</td>
+                <td class="log__links" role="cell">
+                  <a class="gh" href="https://github.com/DayriseA/OCP10_SoftDesk-API" target="_blank" rel="noopener" aria-label="Code source de SoftDesk-API sur GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/></svg><span class="tip" aria-hidden="true">Voir le code source</span></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
 
-              <div class="work__links">
-                <a href="https://github.com/DayriseA/OCP10_SoftDesk-API">
-                  <img src="../assets/images/github.svg" class="work__code" title="Voir le code source" alt="GitHub">
-                </a>
-              </div>
-            </div>
-            <div class="work__techs">
-              <h4>Stack technique</h4>
-              <ul class="work__list">
-                <li>Python</li>
-                <li>Django</li>
-                <li>Django REST Framework</li>
-                <li>JSON Web Token (JWT)</li>
-                <li>Postman</li>
-              </ul>
-            </div>
+      <section class="arrival" id="contact">
+        <div class="wrap arrival__in">
+          <i class="turn turn--final" data-pt></i>
+          <i class="wp wp--dest" data-pt="dest"></i>
+          <h2>Ensuite, votre&nbsp;équipe&nbsp;?</h2>
+          <p>Je cherche un poste dans une équipe expérimentée, où continuer à progresser. Le plus simple reste de m’écrire.</p>
+          <a class="arrival__mail" href="mailto:adrien.maisak@gmail.com">adrien.maisak@gmail.com</a>
+          <div class="actions">
+            <a class="btn btn--lamp" href="../assets/cv/CV_AMK_FR.pdf" download>
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.5v8.2M4.4 6.6 8 10.2l3.6-3.6M2.5 13.5h11"/></svg>
+              Télécharger mon CV
+            </a>
+            <a class="btn btn--line" href="https://github.com/DayriseA" rel="me noopener">
+              <svg class="fill" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 8 .2z"/></svg>
+              GitHub
+            </a>
+            <a class="btn btn--line" href="https://www.linkedin.com/in/adrien-maisak/" rel="me noopener" aria-label="LinkedIn">
+              <svg class="brand" viewBox="0 0 142.06 36" aria-hidden="true" focusable="false"><path fill="#0a66c2" d="M139.4,0H108.72a2.63,2.63,0,0,0-2.66,2.6V33.4a2.63,2.63,0,0,0,2.66,2.6H139.4a2.63,2.63,0,0,0,2.66-2.6V2.6A2.63,2.63,0,0,0,139.4,0Z"/><g fill="#fff"><polygon points="0 5.32 5.55 5.32 5.55 25.55 15.83 25.55 15.83 30.68 0 30.68 0 5.32"/><path d="M18.29,13.49h5.34V30.67H18.29ZM21,4.95A3.09,3.09,0,1,1,17.86,8,3.1,3.1,0,0,1,21,4.95"/><polygon points="45.94 5.32 51.27 5.32 51.27 20.48 57.32 13.48 63.86 13.48 56.86 21.43 63.71 30.68 57.01 30.68 51.34 22.18 51.27 22.18 51.27 30.68 45.94 30.68 45.94 5.32"/><path d="M26.58,13.49H31.7v2.35h.07a5.61,5.61,0,0,1,5.05-2.77c5.41,0,6.4,3.56,6.4,8.18v9.42H37.89V22.32c0-2,0-4.55-2.78-4.55s-3.2,2.17-3.2,4.41v8.5H26.58Z"/><path d="M75.09,20.08a3.2,3.2,0,0,0-3.28-3.27A3.56,3.56,0,0,0,68,20.08Zm4.52,7.61a9.4,9.4,0,0,1-7.29,3.42c-5.34,0-9.61-3.56-9.61-9.08S67,13,72.32,13c5,0,8.11,3.56,8.11,9.07v1.67H68a4,4,0,0,0,4,3.35A4.55,4.55,0,0,0,75.87,25Z"/><path d="M91.55,17.64A4,4,0,0,0,87.28,22a4.27,4.27,0,1,0,8.54,0,4,4,0,0,0-4.27-4.38m9.18,13H95.82V28.39h-.07a6.71,6.71,0,0,1-5.3,2.71c-5.13,0-8.51-3.7-8.51-8.93,0-4.81,3-9.22,7.9-9.22,2.21,0,4.27.6,5.48,2.28h.07V5.32h5.34Z"/><path d="M111.4,13.5h5.34V30.68H111.4ZM114.08,5a3.1,3.1,0,1,1-3.1,3.1,3.1,3.1,0,0,1,3.1-3.1"/><path d="M120.1,13.5h5.12v2.35h.07a5.61,5.61,0,0,1,5.05-2.77c5.41,0,6.4,3.56,6.4,8.18v9.42h-5.34V22.32c0-2,0-4.56-2.78-4.56s-3.2,2.17-3.2,4.41v8.5H120.1Z"/></g></svg>
+            </a>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
+    </div>
   </main>
 
-  <!-- ***** Contact ***** -->
-
-  <section class="contact" id="contact">
-    <div class="row">
-      <h2>Me contacter</h2>
-      <div class="contact__info">
-        <p>
-          👋 Un moyen simple de me joindre : l’e-mail.
-          N’hésitez pas à m’écrire, je ferai de mon mieux pour vous répondre.&nbsp;😊
-        </p>
-        <!-- Replace the email with yours -->
-        <a href="mailto:adrien.maisak@gmail.com" class="btn">adrien.maisak@gmail.com</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ***** Footer ***** -->
-
-  <footer role="contentinfo" class="footer">
-    <div class="row">
-      <!-- Update the links to point to your accounts -->
-      <ul class="footer__social-links">
-        <!-- <li class="footer__social-link-item">
-          <a href="https://twitter.com/" title="Lien vers le profil Twitter">
-            <img src="../assets/images/twitter.svg" class="footer__social-image" alt="Twitter">
-          </a>
-        </li> -->
-        <li class="footer__social-link-item">
-          <a href="https://github.com/DayriseA" title="Lien vers le profil GitHub">
-            <img src="../assets/images/github.svg" class="footer__social-image" alt="Github">
-          </a>
-        </li>
-        <li class="footer__social-link-item">
-          <a href="https://www.linkedin.com/in/adrien-maisak/">
-            <img src="../assets/images/linkedin.svg" title="Lien vers le profil LinkedIn" class="footer__social-image" alt="Linkedin">
-          </a>
-        </li>
-      </ul>
-
-      <!-- If you give me some credit by keeping the below paragraph, will be huge for me 😊 Thanks. -->
-      <p>
-        &copy; 2020 - Template conçu et développé par&nbsp;<a href="https://nisar.dev" class="link">Nisar</a>.
-      </p>
-      <div class="footer__github-buttons">
-        <iframe
-          src="https://ghbtns.com/github-btn.html?user=nisarhassan12&repo=portfolio-template&type=watch&count=true"
-          frameborder="0" scrolling="0" width="170" height="20" title="Suivre le modèle de portfolio sur GitHub">
-        </iframe>
-      </div>
+  <footer class="foot">
+    <div class="wrap foot__in">
+      <p>© 2026 Adrien Maisak</p>
+      <a class="link" href="#top">Retour au départ</a>
     </div>
   </footer>
 
-  <a href="#top" class="back-to-top" title="Retour en haut">
-    <img src="../assets/images/arrow-up.svg" alt="Retour en haut" class="back-to-top__image"/>
-  </a>
-  <script src="../index.js"></script>
+  <script src="../index.js" defer></script>
 </body>
 
 </html>
