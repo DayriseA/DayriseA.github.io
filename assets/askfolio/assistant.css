@@ -1,0 +1,1026 @@
+/* The portfolio assistant: the cockpit's radio.
+   The launcher is a small lit instrument, a sibling of the compass in the top bar; warm, because
+   the visitor can touch it. The panel is a flight log: the visitor's questions are compact warm
+   transmissions, the answers are logbook entries in moonlight. One bold element: the tuning scale
+   along the bottom of the panel's header, whose needle sweeps while the assistant works and stays
+   where it stopped. Built on the custom properties of index.css. */
+
+.askfolio,
+.askfolio-launcher {
+  --askfolio-edge: clamp(16px, 2vw, 28px);
+  --askfolio-case: #0b1943;
+  --askfolio-well: rgba(5, 12, 38, .45);
+  --askfolio-line: rgba(169, 187, 220, .3);
+  --askfolio-error: #f4a79f;
+}
+
+/* A hidden part stays hidden, whatever display the rules below give it. */
+.askfolio [hidden],
+.askfolio-launcher[hidden] {
+  display: none !important;
+}
+
+/* ---------- The instrument (launcher and panel title) ---------- */
+
+.askfolio-dial {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+}
+
+.askfolio-dial__rim {
+  fill: rgba(15, 33, 82, .95);
+  stroke: rgba(246, 185, 79, .6);
+  stroke-width: 1;
+}
+
+.askfolio-dial__ticks {
+  fill: none;
+  stroke: var(--lamp-soft);
+  stroke-width: 3;
+  stroke-dasharray: 3 42;
+  stroke-dashoffset: 1.5;
+  opacity: .8;
+}
+
+.askfolio-dial__waves {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.askfolio-dial__lamp {
+  fill: var(--lamp);
+  filter: drop-shadow(0 0 3px rgba(246, 185, 79, .9));
+}
+
+/* ---------- Launcher ---------- */
+
+.askfolio-launcher {
+  position: fixed;
+  right: max(var(--askfolio-edge), env(safe-area-inset-right));
+  bottom: max(var(--askfolio-edge), env(safe-area-inset-bottom));
+  z-index: 45; /* above the sticky bar (40), under the film grain (50) and the skip link (60) */
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin: 0;
+  padding: 7px 24px 7px 7px;
+  font: 500 1rem/1.15 var(--sans);
+  letter-spacing: .015em;
+  color: var(--paper);
+  background: rgba(10, 21, 59, .86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(246, 185, 79, .55);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(10, 21, 59, .5), 0 12px 36px -12px rgba(246, 185, 79, .55), 0 18px 40px -18px rgba(0, 0, 0, .8);
+  cursor: pointer;
+  transform: translateY(calc(var(--askfolio-lift, 0px) * -1));
+  transition: border-color .2s, box-shadow .2s, color .2s;
+  animation: askfolio-arrive .5s ease-out both;
+}
+
+.askfolio-launcher:hover {
+  color: var(--lamp-soft);
+  border-color: var(--lamp);
+  box-shadow: 0 0 0 1px rgba(10, 21, 59, .5), 0 12px 44px -8px rgba(246, 185, 79, .75), 0 18px 40px -18px rgba(0, 0, 0, .8);
+}
+
+.askfolio-launcher:focus-visible {
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* An answer still arriving while the panel is closed: the lamp transmits. */
+.askfolio-launcher.is-busy .askfolio-dial__lamp {
+  animation: askfolio-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes askfolio-arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes askfolio-blink {
+  50% {
+    opacity: .25;
+  }
+}
+
+/* ---------- Panel ---------- */
+
+.askfolio {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overflow: clip; /* never scrolled, not even by a focus: the header stays in view */
+  font: 400 1rem/1.5 var(--sans);
+  color: var(--moon);
+  background:
+    radial-gradient(120% 60% at 100% 100%, rgba(246, 185, 79, .09), rgba(246, 185, 79, 0) 70%),
+    linear-gradient(180deg, #0e1f52, var(--askfolio-case) 46%, #0a1640),
+    var(--askfolio-case); /* a solid colour, which forced colours keep when they drop gradients */
+  border: 1px solid var(--askfolio-line);
+}
+
+.askfolio[open] {
+  display: flex;
+  flex-direction: column;
+  animation: askfolio-open .22s ease-out;
+}
+
+/* Wide screens: a floating panel in the launcher's corner; the page stays usable around it. */
+.askfolio:not(:modal) {
+  position: fixed;
+  inset: auto max(var(--askfolio-edge), env(safe-area-inset-right)) max(var(--askfolio-edge), env(safe-area-inset-bottom)) auto;
+  z-index: 45;
+  width: min(432px, 100vw - 2 * var(--askfolio-edge));
+  /* Never higher than the viewport under the 64px top bar. */
+  height: min(740px, 100dvh - 64px - 2 * var(--askfolio-edge));
+  max-width: none;
+  max-height: none;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(5, 12, 38, .6), 0 32px 80px -24px rgba(0, 0, 0, .85), 0 0 60px -30px rgba(246, 185, 79, .5);
+  transform-origin: 100% 100%;
+}
+
+/* Narrow screens: a full-screen modal sheet that follows the visual viewport. */
+.askfolio:modal {
+  position: fixed;
+  inset: var(--askfolio-view-top, 0) 0 auto;
+  width: 100%;
+  height: var(--askfolio-view-height, 100dvh);
+  max-width: none;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.askfolio::backdrop {
+  background: rgba(5, 10, 30, .7);
+}
+
+html:has(.askfolio:modal) {
+  overflow: hidden;
+}
+
+@keyframes askfolio-open {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
+}
+
+.askfolio :focus-visible {
+  outline-offset: 2px;
+}
+
+/* ---------- Header: title, disclosure, topic, tuning scale ---------- */
+
+.askfolio__head {
+  flex: none;
+  padding: 14px 14px 0 20px;
+}
+
+.askfolio:modal .askfolio__head {
+  padding-top: max(14px, env(safe-area-inset-top));
+  padding-inline: max(20px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
+}
+
+.askfolio__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.askfolio__titlebar .askfolio-dial {
+  width: 30px;
+  height: 30px;
+}
+
+.askfolio__title {
+  flex: 1;
+  font: 300 1.5rem/1.15 var(--serif);
+  letter-spacing: -.01em;
+  color: var(--paper);
+}
+
+.askfolio__title:focus {
+  outline: none;
+}
+
+.askfolio__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  color: var(--moon);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+}
+
+.askfolio__close:hover {
+  color: var(--lamp-soft);
+  border-color: rgba(246, 185, 79, .5);
+}
+
+.askfolio__close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+/* The AI disclosure: always in view, in the main text colour, the answers' size. */
+.askfolio__disclosure {
+  margin-top: 8px;
+  padding-right: 6px;
+  font: 400 1.0625rem/1.4 var(--sans);
+  color: var(--moon);
+}
+
+.askfolio__topic {
+  margin-top: 2px;
+  padding-right: 6px;
+  font: 400 .9375rem/1.4 var(--sans);
+  letter-spacing: .01em;
+  color: var(--moon-dim);
+}
+
+/* The tuning scale: minor and major ticks rising from a baseline, like the dial's tick ring
+   unrolled, and a lamp needle. */
+.askfolio__scale {
+  position: relative;
+  height: 15px;
+  margin: 12px -14px 0 -20px;
+  background:
+    linear-gradient(90deg, rgba(169, 187, 220, .55) 1px, transparent 1px) 20px 100% / 40px 10px repeat-x,
+    linear-gradient(90deg, rgba(169, 187, 220, .32) 1px, transparent 1px) 20px 100% / 8px 5px repeat-x,
+    linear-gradient(var(--askfolio-line), var(--askfolio-line)) 0 100% / 100% 1px no-repeat;
+}
+
+.askfolio__needle {
+  position: absolute;
+  inset: 0 26px 0 26px;
+  animation: askfolio-tune 7s ease-in-out -2.1s infinite;
+  animation-play-state: paused;
+}
+
+.askfolio__needle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  height: 15px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--lamp);
+  box-shadow: 0 0 6px rgba(246, 185, 79, .7);
+  opacity: .7;
+  transition: opacity .3s, box-shadow .3s;
+}
+
+/* While the assistant works, the needle searches along the band, brighter. */
+.askfolio.is-busy .askfolio__needle {
+  animation-play-state: running;
+}
+
+.askfolio.is-busy .askfolio__needle::before {
+  opacity: 1;
+  box-shadow: 0 0 10px 1px rgba(246, 185, 79, .9);
+}
+
+@keyframes askfolio-tune {
+  0%,
+  100% {
+    transform: translateX(8%);
+  }
+
+  22% {
+    transform: translateX(41%);
+  }
+
+  34% {
+    transform: translateX(36%);
+  }
+
+  58% {
+    transform: translateX(83%);
+  }
+
+  76% {
+    transform: translateX(61%);
+  }
+}
+
+/* ---------- Conversation ---------- */
+
+/* Everything under the header. It fits the panel; when the panel is too short for the log's
+   minimum, the composer and a challenge (a phone in landscape, a virtual keyboard), it scrolls
+   instead of clipping, so that Send stays reachable and the header never moves. */
+.askfolio__main {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 187, 220, .3) transparent;
+  container-type: size; /* the question field's growth follows the room left */
+}
+
+.askfolio__body {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 7.5rem;
+}
+
+.askfolio__log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 187, 220, .3) transparent;
+  padding: 22px 20px 44px;
+}
+
+.askfolio:modal .askfolio__log,
+.askfolio:modal .askfolio__empty {
+  padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
+}
+
+.askfolio__log:empty {
+  display: none;
+}
+
+/* An empty conversation invites a question. */
+.askfolio__empty {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  padding: 24px 20px 22px;
+  font: italic 300 1.375rem/1.3 var(--serif);
+  color: var(--paper);
+  text-wrap: balance;
+}
+
+.askfolio__log:not(:empty) + .askfolio__empty {
+  display: none;
+}
+
+/* The visitor's question: a compact warm transmission on the right. */
+.askfolio__log .is-visitor {
+  align-self: flex-end;
+  max-width: 86%;
+  padding: 9px 15px 10px;
+  font: 400 1rem/1.45 var(--sans);
+  color: var(--paper);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(246, 185, 79, .5);
+  border-radius: 16px 16px 4px 16px;
+  background: rgba(246, 185, 79, .06);
+}
+
+.askfolio__log > * + .is-visitor {
+  margin-top: 30px;
+}
+
+/* The answer: an unboxed logbook entry, marked by a waypoint. */
+.askfolio__log .is-assistant {
+  position: relative;
+  margin-top: 16px;
+  padding-left: 24px;
+  font: 300 1.0625rem/1.6 var(--serif);
+  color: var(--moon);
+  overflow-wrap: break-word;
+}
+
+.askfolio__log .is-assistant::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .5em;
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--moon);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--moon) 0 1.6px, transparent 2px);
+}
+
+/* A line of the log itself: a stop, an interruption, an expired conversation. */
+.askfolio__log .is-note {
+  position: relative;
+  margin-top: 14px;
+  padding-left: 24px;
+  font: 400 .9375rem/1.45 var(--sans);
+  color: var(--moon-dim);
+}
+
+.askfolio__log .is-note::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: .72em;
+  width: 9px;
+  height: 1.5px;
+  background: var(--haze);
+}
+
+.askfolio__log > :first-child {
+  margin-top: 0;
+}
+
+/* ---------- The answers' Markdown (renderMarkdown output carries no class) ---------- */
+
+.is-assistant > * + * {
+  margin-top: .75em;
+}
+
+.is-assistant p {
+  margin: 0;
+}
+
+.is-assistant > * + p {
+  margin-top: .75em;
+}
+
+.is-assistant strong {
+  font-weight: 400;
+  color: var(--paper);
+}
+
+.is-assistant em {
+  font-style: italic;
+}
+
+.is-assistant del {
+  color: var(--moon-dim);
+}
+
+.is-assistant a {
+  color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+  overflow-wrap: anywhere;
+}
+
+.is-assistant a:hover {
+  color: var(--lamp-soft);
+  text-decoration-thickness: 2px;
+}
+
+.is-assistant h3,
+.is-assistant h4,
+.is-assistant h5,
+.is-assistant h6 {
+  margin: 1.2em 0 0;
+  font: 500 1rem/1.35 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+}
+
+.is-assistant h3 {
+  font-size: 1.0625rem;
+}
+
+.is-assistant > :first-child {
+  margin-top: 0;
+}
+
+.is-assistant ul,
+.is-assistant ol {
+  margin: .6em 0 0;
+  padding: 0;
+}
+
+.is-assistant ul {
+  list-style: none;
+}
+
+.is-assistant ul > li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.is-assistant ul > li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: calc(.8em - 1px);
+  width: 10px;
+  height: 1.5px;
+  background: var(--lamp);
+  opacity: .8;
+}
+
+.is-assistant ol {
+  padding-left: 1.6em;
+  list-style: decimal;
+}
+
+.is-assistant ol > li::marker {
+  font: 400 .9375rem var(--sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--moon-dim);
+}
+
+.is-assistant li + li {
+  margin-top: .35em;
+}
+
+.is-assistant li > ul,
+.is-assistant li > ol {
+  margin-top: .35em;
+}
+
+.is-assistant blockquote {
+  margin: .75em 0 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--askfolio-line);
+  font-style: italic;
+  color: var(--moon-dim);
+}
+
+.is-assistant code {
+  padding: .08em .35em;
+  font: .84em/1.4 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  color: var(--paper);
+  background: rgba(132, 162, 222, .14);
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.is-assistant pre {
+  margin: .75em 0 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  background: var(--askfolio-well);
+  border: 1px solid rgba(132, 162, 222, .18);
+  border-radius: 8px;
+}
+
+.is-assistant pre code {
+  padding: 0;
+  background: none;
+  overflow-wrap: normal;
+  white-space: pre;
+}
+
+.is-assistant hr {
+  margin: 1.1em 0 0;
+  border: 0;
+  border-top: 1px solid var(--askfolio-line);
+}
+
+/* A wide table scrolls by itself instead of widening the panel. */
+.is-assistant table {
+  display: block;
+  max-width: 100%;
+  margin-top: .75em;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font: 400 .875rem/1.4 var(--sans);
+}
+
+.is-assistant th,
+.is-assistant td {
+  padding: 7px 14px 7px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(132, 162, 222, .2);
+}
+
+.is-assistant th {
+  font-weight: 500;
+  color: var(--haze);
+}
+
+/* The files an answer was built from */
+
+.askfolio__sources {
+  margin-top: .5em;
+  font: 400 .875rem/1.4 var(--sans);
+  color: var(--moon-dim);
+}
+
+.askfolio__sources summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  letter-spacing: .02em;
+  cursor: pointer;
+  list-style: none;
+}
+
+.askfolio__sources summary::-webkit-details-marker {
+  display: none;
+}
+
+.askfolio__sources summary::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-top: -2px;
+  border-right: 1.5px solid var(--lamp);
+  border-bottom: 1.5px solid var(--lamp);
+  transform: rotate(-45deg);
+  transition: transform .2s;
+}
+
+.askfolio__sources[open] summary::before {
+  margin-top: -5px;
+  transform: rotate(45deg);
+}
+
+.askfolio__sources summary:hover {
+  color: var(--lamp-soft);
+}
+
+.is-assistant .askfolio__sources ul {
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.is-assistant .askfolio__sources li {
+  padding: 3px 0 3px 14px;
+  border-left: 1px solid var(--askfolio-line);
+  overflow-wrap: anywhere;
+}
+
+.is-assistant .askfolio__sources li + li {
+  margin-top: 0;
+}
+
+.is-assistant .askfolio__sources li::before {
+  content: none;
+}
+
+/* The status line: a radio beacon at the foot of the log while the assistant works. */
+.askfolio__status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 20px 10px 21px;
+  font: 400 .9375rem/1.35 var(--sans);
+  letter-spacing: .01em;
+  color: var(--beacon);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(rgba(11, 25, 67, 0), var(--askfolio-case) 45%);
+}
+
+.askfolio__status:empty {
+  display: none;
+}
+
+.askfolio__status::before {
+  content: '';
+  display: inline-block;
+  margin: 0 12px 2px 0;
+  vertical-align: middle;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--beacon);
+  box-shadow: 0 0 0 3px rgba(134, 224, 176, .16), 0 0 12px 1px rgba(134, 224, 176, .7);
+  animation: askfolio-blink 1.6s ease-in-out infinite;
+}
+
+/* ---------- Notice: why nothing can be sent ---------- */
+
+.askfolio__notice {
+  flex: none;
+  margin: 0 20px 4px;
+  padding: 12px 14px;
+  font: 400 1rem/1.45 var(--sans);
+  color: var(--paper);
+  background: rgba(132, 162, 222, .08);
+  border: 1px solid var(--askfolio-line);
+  border-radius: 10px;
+}
+
+.askfolio__contact {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  vertical-align: middle;
+  color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .24em;
+  white-space: nowrap;
+}
+
+.askfolio__contact:hover {
+  color: var(--lamp-soft);
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- The question ---------- */
+
+.askfolio__ask {
+  flex: none;
+  padding: 12px 20px 16px;
+  border-top: 1px solid rgba(132, 162, 222, .16);
+}
+
+.askfolio:modal .askfolio__ask {
+  padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Empty except while a challenge is shown; Cloudflare's widget is about 65px high. */
+.askfolio__turnstile {
+  margin-bottom: 12px;
+  color-scheme: dark;
+}
+
+.askfolio__turnstile:empty {
+  display: none;
+}
+
+.askfolio__privacy {
+  font: 400 .875rem/1.4 var(--sans);
+  color: var(--moon-dim);
+}
+
+.askfolio__field-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
+  margin-top: 10px;
+}
+
+.askfolio__field-head label {
+  font: 500 .9375rem/1.4 var(--sans);
+  letter-spacing: .015em;
+  color: var(--paper);
+}
+
+.askfolio__counter {
+  margin-left: auto;
+  font: 400 .875rem/1.4 var(--sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--moon-dim);
+}
+
+.askfolio__counter.is-over {
+  color: var(--askfolio-error);
+}
+
+.askfolio__question {
+  display: block;
+  width: 100%;
+  min-height: calc(2lh + 22px);
+  max-height: calc(7lh + 22px);
+  max-height: min(calc(7lh + 22px), 38cqh);
+  margin-top: 6px;
+  padding: 10px 14px;
+  field-sizing: content;
+  resize: none;
+  font: 400 1rem/1.45 var(--sans); /* 16px: no zoom on focus in iOS */
+  color: var(--paper);
+  caret-color: var(--lamp);
+  background: var(--askfolio-well);
+  border: 1px solid rgba(169, 187, 220, .42);
+  border-radius: 12px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.askfolio__question:hover {
+  border-color: rgba(169, 187, 220, .65);
+}
+
+.askfolio__question:focus {
+  outline: none;
+  border-color: var(--lamp);
+  box-shadow: 0 0 0 1px var(--lamp), 0 0 22px -8px rgba(246, 185, 79, .6);
+}
+
+.askfolio__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.askfolio__new {
+  min-height: 44px;
+  margin: 0 auto 0 -2px;
+  padding: 0 2px;
+  font: 400 .9375rem/1.2 var(--sans);
+  letter-spacing: .01em;
+  color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .28em;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.askfolio__new:hover:not(:disabled) {
+  color: var(--lamp-soft);
+  text-decoration-thickness: 2px;
+}
+
+.askfolio__send,
+.askfolio__stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 96px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 22px;
+  font: 500 1rem/1.15 var(--sans);
+  letter-spacing: .015em;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color .2s, border-color .2s, box-shadow .2s, color .2s;
+}
+
+.askfolio__send {
+  color: var(--zenith);
+  background: var(--lamp);
+  border: 1px solid var(--lamp);
+  box-shadow: 0 0 0 1px rgba(255, 244, 214, .35) inset, 0 8px 26px -10px rgba(246, 185, 79, .7);
+}
+
+.askfolio__send:hover:not(:disabled) {
+  background: var(--lamp-soft);
+  border-color: var(--lamp-soft);
+}
+
+.askfolio__stop {
+  color: var(--paper);
+  background: rgba(15, 33, 82, .5);
+  border: 1px solid rgba(246, 185, 79, .7);
+}
+
+.askfolio__stop:hover {
+  color: var(--lamp-soft);
+  border-color: var(--lamp);
+}
+
+.askfolio__stop svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.askfolio button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+  box-shadow: none;
+}
+
+/* ---------- Short viewports: a tighter header, the disclosure unchanged ---------- */
+
+@media (max-height: 500px) {
+  .askfolio:modal .askfolio__head {
+    padding-top: max(6px, env(safe-area-inset-top));
+  }
+
+  .askfolio__title {
+    font-size: 1.25rem;
+  }
+
+  .askfolio__titlebar .askfolio-dial {
+    width: 26px;
+    height: 26px;
+  }
+
+  .askfolio__disclosure {
+    margin-top: 2px;
+  }
+
+  .askfolio__scale {
+    margin-top: 8px;
+  }
+
+  .askfolio__body {
+    min-height: 6rem;
+  }
+
+  .askfolio__log {
+    padding-top: 14px;
+  }
+
+  .askfolio__empty {
+    padding-block: 14px;
+    font-size: 1.1875rem;
+  }
+}
+
+/* ---------- Narrow screens: the launcher keeps its instrument, its label is read only ---------- */
+
+@media (max-width: 559px) {
+  .askfolio-launcher {
+    padding: 7px;
+  }
+
+  .askfolio-launcher__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Motion, forced colours, print ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .askfolio-launcher,
+  .askfolio,
+  .askfolio *,
+  .askfolio *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .askfolio-dial__rim,
+  .askfolio-dial__ticks,
+  .askfolio-dial__waves {
+    stroke: ButtonText;
+  }
+
+  .askfolio-dial__rim {
+    fill: ButtonFace;
+  }
+
+  .askfolio-dial__lamp {
+    fill: ButtonText;
+    filter: none;
+  }
+
+  .askfolio__scale {
+    display: none;
+  }
+
+  .askfolio__log .is-assistant::before,
+  .askfolio__log .is-note::before,
+  .askfolio__status::before,
+  .is-assistant ul > li::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+
+  .askfolio__log .is-assistant::before {
+    background: Canvas;
+  }
+
+  .askfolio__question:focus {
+    outline: 2px solid Highlight;
+  }
+}
+
+@media print {
+  .askfolio-launcher,
+  .askfolio {
+    display: none !important;
+  }
+}

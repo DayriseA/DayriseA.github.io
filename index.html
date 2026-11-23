@@ -28,6 +28,8 @@
   <link rel="preload" href="assets/fonts/spectral-300.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="assets/askfolio/assistant.css">
+  <script type="module" src="assets/askfolio/assistant.js"></script>
   <script type="application/ld+json">
     {"@context": "https://schema.org", "@type": "Person", "name": "Adrien Maisak", "alternateName": "DayriseA", "jobTitle": "Application developer", "url": "https://dayrisea.github.io/", "address": {"@type": "PostalAddress", "addressLocality": "Toulouse", "addressCountry": "FR"}, "sameAs": ["https://github.com/DayriseA", "https://www.linkedin.com/in/adrien-maisak/"]}
   </script>
@@ -372,6 +374,67 @@
       <a class="link" href="#top">Back to the start</a>
     </div>
   </footer>
+
+  <!-- The portfolio assistant (assets/askfolio/assistant.js): hidden until the service answers. -->
+  <button class="askfolio-launcher" id="askfolio-launcher" type="button" aria-haspopup="dialog" aria-controls="askfolio" hidden>
+    <svg class="askfolio-dial" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+      <circle cx="20" cy="20" r="18.5" class="askfolio-dial__rim"/>
+      <circle cx="20" cy="20" r="14.5" pathLength="360" class="askfolio-dial__ticks"/>
+      <path d="M16.11 16.11a5.5 5.5 0 0 0 0 7.78M23.89 16.11a5.5 5.5 0 0 1 0 7.78M13.28 13.28a9.5 9.5 0 0 0 0 13.44M26.72 13.28a9.5 9.5 0 0 1 0 13.44" class="askfolio-dial__waves"/>
+      <circle cx="20" cy="20" r="2.1" class="askfolio-dial__lamp"/>
+    </svg>
+    <span class="askfolio-launcher__label">Ask the assistant</span>
+  </button>
+
+  <dialog class="askfolio" id="askfolio" aria-labelledby="askfolio-title">
+    <header class="askfolio__head">
+      <div class="askfolio__titlebar">
+        <svg class="askfolio-dial" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <circle cx="20" cy="20" r="18.5" class="askfolio-dial__rim"/>
+          <circle cx="20" cy="20" r="14.5" pathLength="360" class="askfolio-dial__ticks"/>
+          <path d="M16.11 16.11a5.5 5.5 0 0 0 0 7.78M23.89 16.11a5.5 5.5 0 0 1 0 7.78M13.28 13.28a9.5 9.5 0 0 0 0 13.44M26.72 13.28a9.5 9.5 0 0 1 0 13.44" class="askfolio-dial__waves"/>
+          <circle cx="20" cy="20" r="2.1" class="askfolio-dial__lamp"/>
+        </svg>
+        <h2 class="askfolio__title" id="askfolio-title" tabindex="-1">Portfolio assistant</h2>
+        <button class="askfolio__close" id="askfolio-close" type="button">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
+          <span class="vh">Close</span>
+        </button>
+      </div>
+      <p class="askfolio__disclosure" id="askfolio-disclosure"></p>
+      <p class="askfolio__topic" id="askfolio-topic"></p>
+      <div class="askfolio__scale" aria-hidden="true"><span class="askfolio__needle"></span></div>
+    </header>
+    <div class="askfolio__main">
+      <div class="askfolio__body">
+        <ol class="askfolio__log" id="askfolio-log" role="log" aria-live="off" aria-busy="false" aria-label="Conversation"></ol>
+        <p class="askfolio__empty">Ask about Adrien’s background or any of his projects.</p>
+        <p class="askfolio__status" id="askfolio-status" aria-hidden="true"></p>
+      </div>
+      <div class="vh" id="askfolio-live" aria-live="polite"></div>
+      <p class="askfolio__notice" id="askfolio-notice" hidden>
+        <span class="askfolio__notice-text"></span>
+        <a class="askfolio__contact" href="mailto:adrien.maisak@gmail.com">Email Adrien</a>
+      </p>
+      <form class="askfolio__ask" id="askfolio-ask">
+        <div class="askfolio__turnstile" id="askfolio-turnstile"></div>
+        <p class="askfolio__privacy">Questions are logged anonymously to improve this assistant. Do not share sensitive information.</p>
+        <div class="askfolio__field-head">
+          <label for="askfolio-question">Your question</label>
+          <span class="askfolio__counter" id="askfolio-counter"></span>
+        </div>
+        <textarea class="askfolio__question" id="askfolio-question" rows="2" aria-describedby="askfolio-counter"></textarea>
+        <div class="askfolio__actions">
+          <button class="askfolio__new" id="askfolio-new" type="button" hidden>New conversation</button>
+          <button class="askfolio__send" id="askfolio-send" type="submit">Send</button>
+          <button class="askfolio__stop" id="askfolio-stop" type="button" hidden>
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="4" y="4" width="8" height="8" rx="1.5"/></svg>
+            Stop
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 
   <script src="index.js" defer></script>
 </body>
