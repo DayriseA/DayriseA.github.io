@@ -1,4 +1,4 @@
-/* Vol de nuit — the route and the compass.
+/* Night flight — the route and the compass.
    The page works without this file: it only draws the route between the
    waypoints already in the markup, and lets the compass follow it. */
 

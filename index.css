@@ -1,4 +1,4 @@
-/* Vol de nuit — Adrien Maisak
+/* Night flight — Adrien Maisak
    Cold light belongs to the night outside (sky, chart, text).
    Warm light belongs to the cockpit: what the visitor can touch. */
 
@@ -1347,7 +1347,7 @@ a.gh:focus-visible svg {
   padding: 72px 0 clamp(96px, 12vw, 150px);
   text-align: center;
   scroll-margin-top: 48px;
-  background: url('assets/images/balisage.svg') center 80px / 1680px auto no-repeat;
+  background: url('assets/images/approach-lights.svg') center 80px / 1680px auto no-repeat;
 }
 
 .arrival__in {
