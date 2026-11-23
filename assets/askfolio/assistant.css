@@ -412,11 +412,78 @@ html:has(.askfolio:modal) {
 }
 
 /* The two views, as two bands of the radio: the selected one is lit by a lamp bar that rests on the
-   tuning scale. */
+   tuning scale. The privacy link shares their row, at its far end, once the notices that held it are
+   closed: a quiet underlined word in moonlight, smaller than the tabs, with no bar to light. */
+.askfolio__bands {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 4px;
+}
+
 .askfolio__tabs {
   display: flex;
   gap: 22px;
-  margin-top: 4px;
+}
+
+.askfolio__privacy {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  margin: 0 6px 0 auto;
+  padding: 0 2px;
+  font: 400 .875rem/1.3 var(--sans);
+  letter-spacing: .01em;
+  color: var(--moon-dim);
+  text-decoration: underline;
+  text-decoration-color: rgba(169, 187, 220, .5);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .24em;
+  white-space: nowrap;
+  transition: color .2s;
+}
+
+.askfolio__privacy:hover {
+  color: var(--lamp-soft);
+  text-decoration-color: var(--lamp);
+}
+
+.askfolio__privacy svg {
+  display: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The narrowest phones have no room for the word beside two French tabs: a shield with a keyhole,
+   the usual sign for privacy, in a 44px target says it; the word is still read. */
+@media (max-width: 359px) {
+  .askfolio__privacy {
+    justify-content: center;
+    width: 44px;
+    margin-right: 0;
+    padding: 0;
+    border-radius: 50%;
+    align-self: center;
+  }
+
+  .askfolio__privacy svg {
+    display: block;
+  }
+
+  .askfolio__privacy-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .askfolio__tab {
@@ -698,9 +765,11 @@ html:has(.askfolio:modal) {
 
 /* ---------- Conversation ---------- */
 
-/* Everything under the header and the strip. It fits the panel; when the panel is too short for a
-   view's minimum (a phone in landscape, a virtual keyboard), it scrolls instead of clipping, so that
-   Send and Analyze stay reachable and the header never moves. */
+/* Everything under the header and the strip. It fits the panel: in the conversation, the composer
+   (the notice, the question, Send) keeps its height at the bottom and the part above it gives, the
+   log or the empty conversation scrolling inside itself. Only when the panel is too short for even a
+   small body over the composer (a phone in landscape, a virtual keyboard) does it scroll as a whole,
+   instead of clipping, so that Send and Analyze stay reachable and the header never moves. */
 .askfolio__main {
   display: flex;
   flex: 1 1 0;
@@ -725,7 +794,8 @@ html:has(.askfolio:modal) {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  min-height: 7.5rem;
+  min-height: 0; /* it gives way before the composer does; assistant.js keeps it a share of the
+                    room when it sizes the question field */
 }
 
 .askfolio__log {
@@ -750,19 +820,51 @@ html:has(.askfolio:modal) {
   display: none;
 }
 
-/* Without messages, the body is as tall as the invitation and its suggestions: on a short panel,
-   .askfolio__main scrolls instead of letting them run under the question. */
-.askfolio__body:has(> .askfolio__log:empty) {
-  min-height: auto;
-}
-
-/* An empty conversation invites a question, and suggests two or three that fit the topic. */
+/* An empty conversation invites a question, and suggests two or three that fit the topic. It rests
+   on the composer; on a panel too short for it, it scrolls inside itself from its top (the auto
+   margin, unlike flex-end, never pushes content out of reach), and a fade marks the edge that has
+   more (assistant.js sets is-above and is-below). */
 .askfolio__empty {
   display: flex;
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 24px 20px 14px;
+  min-height: 0;
+  padding: 8px 20px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 187, 220, .3) transparent;
+}
+
+.askfolio__starter {
+  margin-top: auto;
+}
+
+/* A suggestion reached with the keyboard is scrolled clear of the edges, its focus ring included,
+   and no fade covers it while it has the focus (below). */
+.askfolio__empty {
+  scroll-padding-block: 8px;
+}
+
+
+.askfolio__empty.is-below {
+  -webkit-mask-image: linear-gradient(#000 max(calc(100% - 40px), 60%), transparent);
+  mask-image: linear-gradient(#000 max(calc(100% - 40px), 60%), transparent);
+}
+
+.askfolio__empty.is-above {
+  -webkit-mask-image: linear-gradient(transparent, #000 min(28px, 30%));
+  mask-image: linear-gradient(transparent, #000 min(28px, 30%));
+}
+
+.askfolio__empty.is-above.is-below {
+  -webkit-mask-image: linear-gradient(transparent, #000 min(28px, 30%), #000 max(calc(100% - 40px), 60%), transparent);
+  mask-image: linear-gradient(transparent, #000 min(28px, 30%), #000 max(calc(100% - 40px), 60%), transparent);
+}
+
+.askfolio__empty:has(.askfolio__suggestion:focus-visible) {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .askfolio__invite {
@@ -1222,12 +1324,131 @@ html:has(.askfolio:modal) {
   display: none;
 }
 
-.askfolio__privacy {
-  font: 400 .875rem/1.4 var(--sans);
-  color: var(--moon-dim);
+/* ---------- Placards: what to know before using a view, closed by the visitor ----------
+   A note clipped to the log, not an alert: moonlight text in a faint well with a hairline edge. Its
+   two actions are smaller and quieter than Send and Analyze: "OK", outlined in lamp light as
+   everything the visitor can touch, and "Don't show again", an underlined word beside it. Closing it
+   collapses it (assistant.js, which animates its box: border-box); then it is gone. */
+
+.askfolio__placard {
+  box-sizing: border-box;
+  margin: 0 0 12px;
+  padding: 10px 14px 8px 15px;
+  overflow: hidden; /* while it collapses */
+  font: 400 .875rem/1.5 var(--sans);
+  color: var(--moon);
+  background: rgba(132, 162, 222, .065);
+  border: 1px solid rgba(132, 162, 222, .17);
+  border-radius: 12px;
 }
 
-/* The link to the privacy page, at the end of the notice. Its target reaches 44px through a
+.askfolio__placard-text {
+  max-width: 34em;
+  overflow-wrap: break-word;
+}
+
+/* The actions' row is as high as the keys (28px); their 44px targets reach over the spacing above
+   and below it, which keeps the note short. Above, they start where the text's last line ends, and
+   the privacy link's own target stops there: the two never overlap. */
+.askfolio__placard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+  margin: 8px 0 0 -2px;
+}
+
+.askfolio__placard .askfolio__more::after {
+  inset: -12px -4px 0;
+}
+
+.askfolio__placard-ok,
+.askfolio__placard-never {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: -8px 0;
+  font: 500 .875rem/1.2 var(--sans);
+  letter-spacing: .015em;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background-color .2s;
+}
+
+/* "OK": a small outlined key, drawn 28px high in its 44px target. The key is its ::before, behind
+   the word; the button itself stays a plain rectangle, so that its whole target takes a tap, and its
+   focus ring is drawn around the key. */
+.askfolio__placard-ok {
+  z-index: 0; /* the key's own layer, behind the word */
+  min-width: 60px;
+  padding: 0 17px;
+  color: var(--paper);
+}
+
+.askfolio__placard-ok::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 8px 0;
+  background: rgba(15, 33, 82, .55);
+  border: 1px solid rgba(246, 185, 79, .7);
+  border-radius: 999px;
+  transition: border-color .2s;
+}
+
+.askfolio__placard-ok:hover {
+  color: var(--lamp-soft);
+}
+
+/* The focus ring around the key or the words, not their whole target. */
+.askfolio__placard-ok:focus-visible {
+  outline: none;
+}
+
+.askfolio__placard-ok:focus-visible::before {
+  outline: 2px solid var(--lamp);
+  outline-offset: 2px;
+}
+
+.askfolio__placard-never:focus-visible {
+  outline-offset: -4px;
+}
+
+.askfolio__placard-ok:hover::before {
+  border-color: var(--lamp);
+}
+
+.askfolio__placard-never {
+  padding: 0 8px;
+  font-weight: 400;
+  color: var(--moon-dim);
+  text-decoration: underline;
+  text-decoration-color: rgba(169, 187, 220, .5);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .28em;
+}
+
+.askfolio__placard-never:hover {
+  color: var(--lamp-soft);
+  text-decoration-color: var(--lamp);
+}
+
+/* While nothing can be sent (a blocking notice), the notices about what is sent step aside: they
+   are not closed, and come back once sending is possible again. A report's disclaimer stays. */
+.askfolio.is-blocked .askfolio__placard:not(.askfolio__placard--report) {
+  display: none;
+}
+
+/* Above the question: the field's label follows it closely, and keeps the form's own top spacing
+   once it is gone. */
+.askfolio__placard + .askfolio__field-head {
+  margin-top: 0;
+}
+
+/* The link to the privacy page, at the end of a notice. Its target reaches 44px through a
    pseudo-element, so the line keeps its height and the focus ring hugs the word. */
 .askfolio__more {
   position: relative;
@@ -1281,7 +1502,7 @@ html:has(.askfolio:modal) {
   width: 100%;
   min-height: calc(2lh + 22px);
   max-height: calc(7lh + 22px);
-  max-height: min(calc(7lh + 22px), 38cqh);
+  max-height: min(calc(7lh + 22px), 38cqh, var(--askfolio-room, 100vh)); /* assistant.js: the room left */
   margin-top: 6px;
   padding: 10px 14px;
   field-sizing: content;
@@ -1412,17 +1633,16 @@ html:has(.askfolio:modal) {
   margin-bottom: 14px;
 }
 
-/* The fixed notice that an analysis is AI-generated: a margin note in the log, in plain
-   moonlight. */
-.askfolio__disclaimer {
-  padding: 2px 0 2px 14px;
-  font: 400 .9375rem/1.5 var(--sans);
-  color: var(--moon);
-  border-left: 2px solid var(--haze);
+/* The form's lead: the invitation and what to do, in one line of the conversation's voice, a step
+   smaller, as it says more. */
+.askfolio__lead {
+  font-size: 1.1875rem;
+  line-height: 1.35;
 }
 
-.askfolio__offer .askfolio__privacy {
-  margin-top: 14px;
+/* Under the lead, the notice; the label of the text keeps its own spacing once it is gone. */
+.askfolio__offer .askfolio__placard {
+  margin-bottom: 0;
 }
 
 .askfolio__label {
@@ -1619,6 +1839,17 @@ html:has(.askfolio:modal) {
 
 .askfolio__report:focus {
   outline: none;
+}
+
+/* The disclaimer first, until it is closed; then the report starts with its first part, with no
+   rule above it, as if nothing had been there. */
+.askfolio__report > :first-child {
+  margin-top: 0;
+}
+
+.askfolio__report > h3:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .askfolio__truncated {
@@ -1834,6 +2065,102 @@ html:has(.askfolio:modal) {
   background: radial-gradient(circle, var(--moon) 0 1.6px, transparent 2px);
 }
 
+/* ---------- Limited heights: a notice and the conversation together ----------
+   While the conversation's notice is shown on a limited height of the room below the header (a
+   laptop's browser window), what is loose around the invitation tightens so that it, its
+   suggestions, the notice and the composer fit together: less air, compact suggestion rows where a
+   fine pointer needs no 44px target, and a question field that starts at one row and grows as the
+   visitor types. Once the notice is closed, they ease back to the comfortable layout, which taller
+   rooms always keep. */
+
+.askfolio__suggestion {
+  transition: color .2s, min-height .2s ease-out, padding .2s ease-out;
+}
+
+.askfolio__ask .askfolio__question {
+  transition: border-color .2s, box-shadow .2s, min-height .2s ease-out;
+}
+
+.askfolio__empty .askfolio__invite {
+  transition: font-size .2s ease-out;
+}
+
+@container (max-height: 580px) {
+  .askfolio:not(.is-blocked) .askfolio__view:has(> .askfolio__ask > .askfolio__placard:not([hidden])) {
+    & .askfolio__topic {
+      padding-top: 2px;
+    }
+
+    & .askfolio__empty {
+      padding-block: 3px 6px;
+    }
+
+    & .askfolio__invite {
+      font-size: 1.1875rem;
+    }
+
+    & .askfolio__suggestions {
+      margin-top: 4px;
+    }
+
+    & .askfolio__ask {
+      padding-top: 10px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom)); /* a phone's home bar */
+    }
+
+    & .askfolio__placard {
+      margin-bottom: 8px;
+      padding-top: 7px;
+    }
+
+    & .askfolio__question {
+      min-height: calc(1lh + 22px);
+      margin-top: 4px;
+    }
+
+    & .askfolio__actions {
+      margin-top: 6px;
+    }
+
+    @media (pointer: fine) {
+      & .askfolio__select {
+        min-height: 36px;
+      }
+
+      & .askfolio__suggestion {
+        min-height: 32px;
+        padding-block: 4px;
+        line-height: 1.35;
+      }
+
+      & .askfolio__suggestion::before {
+        top: calc(4px + .7em - 1px);
+      }
+    }
+  }
+}
+
+/* A laptop's browser window, with a mouse: the header's controls need no 44px touch target, and give
+   their extra height to the conversation. The disclosure is unchanged. */
+@media (max-height: 859px) and (pointer: fine) {
+  .askfolio:not(:modal) {
+    --askfolio-edge: 16px; /* closer to the window's edges, a little taller */
+  }
+
+  .askfolio__tab {
+    min-height: 36px;
+  }
+
+  .askfolio__privacy {
+    min-height: 36px;
+  }
+
+  .askfolio__close {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 /* ---------- Short viewports: a tighter header, the disclosure unchanged ---------- */
 
 @media (max-height: 500px) {
@@ -1856,6 +2183,17 @@ html:has(.askfolio:modal) {
 
   .askfolio__body {
     min-height: 6rem;
+  }
+
+  /* Here the whole area under the header scrolls: the empty conversation keeps its full height
+     instead of scrolling in a slot of its own. */
+  .askfolio__body:has(> .askfolio__log:empty) {
+    min-height: auto;
+  }
+
+  .askfolio__empty {
+    flex: 1 0 auto;
+    overflow: visible;
   }
 
   .askfolio__sheet {
@@ -1983,7 +2321,8 @@ html:has(.askfolio:modal) {
     background: Canvas;
   }
 
-  .askfolio__file-pick {
+  .askfolio__file-pick,
+  .askfolio__placard-ok::before {
     border-color: ButtonText;
   }
 

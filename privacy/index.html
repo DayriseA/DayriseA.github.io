@@ -54,7 +54,7 @@
       <header class="doc__head" id="top">
         <h1>Privacy</h1>
         <p class="doc__lede">What happens to your data when you visit this portfolio and use its AI assistant, in plain&nbsp;words.</p>
-        <p class="doc__date">Last updated on <time datetime="2026-11-23">23 November 2026</time></p>
+        <p class="doc__date">Last updated on <time datetime="2026-11-24">24 November 2026</time></p>
       </header>
 
       <nav class="doc__toc" aria-labelledby="toc-title">
@@ -177,12 +177,13 @@
 
         <section class="doc__part" aria-labelledby="browser">
           <h2 id="browser">What is stored in your browser</h2>
-          <p>The site and its assistant set no cookie. Once you start using the assistant, it keeps up to two entries in your browser’s session storage (<code>sessionStorage</code>), for this site&nbsp;only:</p>
+          <p>The site and its assistant set no cookie. Once you start using the assistant, it keeps up to two entries for the conversation in your browser’s session storage (<code>sessionStorage</code>), for this site&nbsp;only:</p>
           <ul class="ticks">
             <li><code>askfolio:session:https://askfolio-dayrise.fly.dev</code>: the session token, its expiry time, the session’s usage limits, and the identifier and topic of the current&nbsp;conversation;</li>
             <li><code>site:askfolio-log</code>, from your first answered question on: the identifier of the current conversation, your questions and the answers shown; it is cleared when a new conversation&nbsp;starts.</li>
           </ul>
           <p>They let the conversation continue when you reload the page or switch between English and French in the same tab. They stay in that tab and are erased when you close it; the token stops working after two hours anyway. A job-offer report is not kept in your browser. Cloudflare’s check runs in its own frame, under Cloudflare’s&nbsp;policy.</p>
+          <p>The assistant also remembers which of its notices you closed, under <code>site:askfolio-notices</code>: the list of those notices, nothing else about you. When you choose “OK”, or send a question or an offer while a notice is shown, it is kept in session storage until you close the tab. When you choose “Don’t show again”, it is kept in your browser’s local storage (<code>localStorage</code>) until you clear this site’s&nbsp;data.</p>
         </section>
 
         <section class="doc__part" aria-labelledby="rights">

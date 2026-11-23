@@ -413,9 +413,12 @@
         </button>
       </div>
       <p class="askfolio__disclosure" id="askfolio-disclosure"></p>
-      <div class="askfolio__tabs" role="tablist" aria-label="Modes de l’assistant">
-        <button class="askfolio__tab" id="askfolio-tab-chat" type="button" role="tab" aria-selected="true" aria-controls="askfolio-view-chat">Conversation</button>
-        <button class="askfolio__tab" id="askfolio-tab-offer" type="button" role="tab" aria-selected="false" aria-controls="askfolio-view-offer" tabindex="-1">Offre d’emploi<span class="askfolio__tab-mark" id="askfolio-tab-mark" hidden><span class="vh">, rapport prêt</span></span></button>
+      <div class="askfolio__bands">
+        <div class="askfolio__tabs" role="tablist" aria-label="Modes de l’assistant">
+          <button class="askfolio__tab" id="askfolio-tab-chat" type="button" role="tab" aria-selected="true" aria-controls="askfolio-view-chat">Conversation</button>
+          <button class="askfolio__tab" id="askfolio-tab-offer" type="button" role="tab" aria-selected="false" aria-controls="askfolio-view-offer" tabindex="-1">Offre d’emploi<span class="askfolio__tab-mark" id="askfolio-tab-mark" hidden><span class="vh">, rapport prêt</span></span></button>
+        </div>
+        <a class="askfolio__privacy" id="askfolio-privacy" href="confidentialite/" target="_blank" rel="noopener" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.75 2.75 3.6v4.1c0 3.1 2.2 5.6 5.25 6.55 3.05-.95 5.25-3.45 5.25-6.55V3.6z"/><path d="M8 8.4v2.2"/><circle cx="8" cy="7" r="1.4"/></svg><span class="askfolio__privacy-word">Confidentialité</span><span class="vh"> (s’ouvre dans un nouvel onglet)</span></a>
       </div>
       <div class="askfolio__scale" aria-hidden="true"><span class="askfolio__needle"></span></div>
     </header>
@@ -474,7 +477,13 @@
           <p class="askfolio__status" id="askfolio-status" aria-hidden="true"></p>
         </div>
         <form class="askfolio__ask" id="askfolio-ask">
-          <p class="askfolio__privacy">Les questions sont enregistrées de façon anonyme pour améliorer cet assistant. Ne partagez pas d’informations sensibles. <a class="askfolio__more" href="confidentialite/" target="_blank" rel="noopener">Confidentialité<span class="vh"> (s’ouvre dans un nouvel onglet)</span></a></p>
+          <div class="askfolio__placard" id="askfolio-placard-chat" role="group" aria-label="Avis de confidentialité" data-askfolio-placard="chat">
+            <p class="askfolio__placard-text">Les questions sont enregistrées de façon anonyme pour améliorer cet assistant. Ne partagez pas d’informations sensibles. <a class="askfolio__more" href="confidentialite/" target="_blank" rel="noopener">Confidentialité<span class="vh"> (s’ouvre dans un nouvel onglet)</span></a></p>
+            <div class="askfolio__placard-actions">
+              <button class="askfolio__placard-ok" type="button" data-askfolio-close="session">OK</button>
+              <button class="askfolio__placard-never" type="button" data-askfolio-close="always">Ne plus afficher</button>
+            </div>
+          </div>
           <div class="askfolio__field-head">
             <label for="askfolio-question">Votre question</label>
             <span class="askfolio__counter" id="askfolio-counter"></span>
@@ -494,9 +503,14 @@
         <div class="askfolio__body askfolio__body--offer">
           <div class="askfolio__sheet" id="askfolio-sheet">
             <form class="askfolio__offer" id="askfolio-offer">
-              <p class="askfolio__invite">Comparez une offre d’emploi avec le profil d’Adrien.</p>
-              <p class="askfolio__disclaimer" id="askfolio-offer-disclaimer"></p>
-              <p class="askfolio__privacy">Collez l’offre d’emploi ou importez-la en PDF. Le fichier et le texte ne sont pas conservés. Les questions sont enregistrées de façon anonyme pour améliorer cet assistant. <a class="askfolio__more" href="confidentialite/" target="_blank" rel="noopener">Confidentialité<span class="vh"> (s’ouvre dans un nouvel onglet)</span></a></p>
+              <p class="askfolio__invite askfolio__lead">Collez une offre d’emploi, ou importez-la en PDF, pour la comparer au profil d’Adrien.</p>
+              <div class="askfolio__placard" id="askfolio-placard-offer" role="group" aria-label="À propos de l’analyse" data-askfolio-placard="offer">
+                <p class="askfolio__placard-text">L’analyse sera générée par IA à partir du contenu de ce portfolio. Elle peut être incomplète ou erronée et ne remplace pas un entretien&nbsp;: lisez-la avec un regard critique. Le fichier et le texte de l’offre ne seront pas conservés. <a class="askfolio__more" href="confidentialite/" target="_blank" rel="noopener">Confidentialité<span class="vh"> (s’ouvre dans un nouvel onglet)</span></a></p>
+                <div class="askfolio__placard-actions">
+                  <button class="askfolio__placard-ok" type="button" data-askfolio-close="session">OK</button>
+                  <button class="askfolio__placard-never" type="button" data-askfolio-close="always">Ne plus afficher</button>
+                </div>
+              </div>
               <label class="askfolio__label" for="askfolio-offer-text">Texte de l’offre</label>
               <textarea class="askfolio__question askfolio__offer-text" id="askfolio-offer-text" rows="6" aria-describedby="askfolio-offer-error"></textarea>
               <p class="askfolio__or">ou</p>

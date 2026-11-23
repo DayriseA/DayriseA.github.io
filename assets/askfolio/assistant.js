@@ -4,13 +4,17 @@
 // wide screens, so the page stays readable and scrollable, and a full-screen modal sheet on narrow
 // ones. The panel has two views, switched by tabs in its header: the conversation, and the
 // job-offer analysis, where a recruiter pastes an offer or uploads it as a PDF and gets a report.
+// Three notices the visitor can close (placards) say what to know before using a view: the privacy
+// notice above the question, what an analysis will be above the offer, and each report's own
+// disclaimer above its summary. A closed notice is gone, for the tab ("OK") or for every visit
+// ("Don't show again"); a privacy link in the header takes the place of the first two. The AI
+// disclosure in the header never closes.
 // It runs as a module: if this file or the client fails to load, nothing runs, the launcher stays
 // hidden and the rest of the page is untouched (rule 1).
 import {
   AI_DISCLOSURE,
   AskfolioClient,
   messageLength,
-  OFFER_DISCLAIMER,
   offerTextLength,
 } from "./askfolio-client.js";
 import { renderMarkdown } from "./askfolio-markdown.js";
@@ -20,6 +24,12 @@ const LOCAL = location.hostname === "localhost" || location.hostname === "127.0.
 const SERVICE_URL = LOCAL ? "http://localhost:8787" : "https://askfolio-dayrise.fly.dev";
 
 const LOG_KEY = "site:askfolio-log"; // the page's own copy of the messages it shows
+// The notices the visitor closed: in sessionStorage for "OK" (this tab), in localStorage for "Don't
+// show again" (every visit). One key in both, holding a list of the ids below.
+const NOTICES_KEY = "site:askfolio-notices";
+const NOTICE_IDS = ["chat", "offer", "report"];
+const STORES = { session: () => sessionStorage, always: () => localStorage }; // either may throw
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)");
 const lang = document.documentElement.lang.startsWith("fr") ? "fr" : "en";
 const number = (value) => value.toLocaleString(lang);
 const kilobytes = (bytes) => number(Math.max(1, Math.round(bytes / 1024)));
@@ -78,6 +88,9 @@ const TEXT = {
     gaps: "Gaps",
     questions: "Questions to ask Adrien",
     truncated: "The offer was long: only its first part was analyzed.",
+    aboutReport: "About this report",
+    ok: "OK",
+    never: "Don’t show again",
   },
   fr: {
     newTopic: (name) => `Nouvelle conversation. Sujet : ${name}.`,
@@ -126,6 +139,9 @@ const TEXT = {
     gaps: "Écarts",
     questions: "Questions à poser à Adrien",
     truncated: "L’offre était longue : seule sa première partie a été analysée.",
+    aboutReport: "À propos de ce rapport",
+    ok: "OK",
+    never: "Ne plus afficher",
   },
 }[lang];
 
@@ -177,6 +193,9 @@ const analyse = $("askfolio-analyse");
 const offerStop = $("askfolio-offer-stop");
 const another = $("askfolio-another");
 const toReport = $("askfolio-to-report");
+// The notices of the markup, and the privacy link that stands for them once they are closed.
+const placards = { chat: $("askfolio-placard-chat"), offer: $("askfolio-placard-offer") };
+const privacy = $("askfolio-privacy");
 
 const client = new AskfolioClient({
   serviceUrl: SERVICE_URL,
@@ -197,13 +216,15 @@ let drafted = null; // the scope of the draft a topic button put in the field, w
 let view = "chat"; // the view shown: "chat" or "offer"
 let showing = "form"; // what the job-offer view shows: "form" or "report"
 const scrolls = { chat: null, form: 0, report: 0 }; // where each view was last scrolled, shown
+const closed = new Set([...closedIn("session"), ...closedIn("always")]); // the notices closed
 
 // ─── Start: only when the service can answer (rule 1) ─────────────────────────────────────────
 
 const health = await client.health();
 if (health.status !== "unavailable") {
   $("askfolio-disclosure").textContent = AI_DISCLOSURE[lang];
-  $("askfolio-offer-disclaimer").textContent = OFFER_DISCLAIMER[lang];
+  for (const [id, placard] of Object.entries(placards)) placard.hidden = closed.has(id);
+  showPrivacy();
   topic.value = scope;
   if (topic.value !== scope) {
     // A stored topic this page does not offer (any more): its conversation is not continued.
@@ -217,6 +238,115 @@ if (health.status !== "unavailable") {
   launcher.hidden = false;
   for (const button of [...topicButtons, ...viewButtons]) button.hidden = false;
   followPage();
+}
+
+// ─── The notices the visitor closes ───────────────────────────────────────────────────────────
+
+/** The notice ids closed in one store; a value of another shape is ignored, never thrown on. */
+function closedIn(store) {
+  try {
+    const ids = JSON.parse(STORES[store]().getItem(NOTICES_KEY));
+    return Array.isArray(ids) ? ids.filter((id) => NOTICE_IDS.includes(id)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function remember(id, store) {
+  closed.add(id);
+  try {
+    const ids = new Set([...closedIn(store), id]);
+    STORES[store]().setItem(NOTICES_KEY, JSON.stringify([...ids]));
+  } catch {
+    // Without storage, the notice stays closed for the page's life.
+  }
+}
+
+/**
+ * The privacy link in the header, unless the notice in view holds it already. While a blocking
+ * notice is shown, the notices step aside (CSS) and the link stands for them.
+ */
+function showPrivacy() {
+  const holder = view === "chat" ? "chat" : showing === "form" ? "offer" : null;
+  privacy.hidden = holder !== null && !closed.has(holder) && blocked === null;
+}
+
+/**
+ * Closes a notice for the tab (`store` "session": its "OK", or using the view) or for every
+ * visit ("always"). It collapses, then leaves the layout, a report's notice the report itself.
+ * The focus moves on from it to where the visitor goes next: the field under it, or the report;
+ * with `moveFocus` for a button of the notice (a pointer may not have focused it), else only
+ * from inside it.
+ */
+function closeNotice(placard, store, moveFocus = false) {
+  const id = placard.dataset.askfolioPlacard;
+  remember(id, store);
+  showPrivacy();
+  if (placard.inert) return; // already closing
+  if (moveFocus || placard.contains(document.activeElement)) {
+    if (id === "report") report.focus({ preventScroll: true });
+    else fieldOf(id).focus();
+  }
+  placard.inert = true;
+  const animations = [];
+  const done = () => {
+    if (id === "report") placard.remove();
+    else Object.assign(placard, { hidden: true, inert: false });
+    for (const animation of animations) animation.cancel(); // held at their end until now
+  };
+  if (REDUCED.matches || placard.getClientRects().length === 0) return done();
+  // A short collapse: its height, its spacing and its frame go to nothing as it fades.
+  const timing = { duration: 200, easing: "cubic-bezier(.4, 0, .6, 1)", fill: "forwards" };
+  const { marginTop, marginBottom, paddingTop, paddingBottom } = getComputedStyle(placard);
+  const from = { marginTop, marginBottom, paddingTop, paddingBottom };
+  const to = { marginTop: "0px", marginBottom: "0px", paddingTop: "0px", paddingBottom: "0px" };
+  Object.assign(from, { height: `${placard.offsetHeight}px`, opacity: 1 });
+  Object.assign(to, { height: "0px", opacity: 0, borderWidth: "0px" });
+  animations.push(placard.animate([from, to], timing));
+  // In a report, the part after it becomes the first: its top spacing and rule leave with it.
+  const next = id === "report" ? placard.nextElementSibling : null;
+  const first = { marginTop: "0px", paddingTop: "0px", borderTopColor: "transparent" };
+  if (next !== null) animations.push(next.animate([first], timing));
+  animations[0].finished.then(done, done);
+}
+
+/**
+ * Using a view closes its notice for the tab, once the service is really answering: at the first
+ * progress or text of the turn, or its result. A turn that never reached it (a failed human check,
+ * no network, a refused input, a notice, a stop before anything came) leaves the notice shown.
+ */
+function used(id) {
+  if (!closed.has(id)) closeNotice(placards[id], "session");
+}
+
+panel.addEventListener("click", (event) => {
+  const button = event.target.closest?.("[data-askfolio-close]");
+  if (button === null || button === undefined) return;
+  const placard = button.closest("[data-askfolio-placard]");
+  closeNotice(placard, button.dataset.askfolioClose === "always" ? "always" : "session", true);
+});
+
+/** The report's disclaimer, as a notice: the service's text, in the report's language. */
+function reportNotice(disclaimer, language) {
+  const placard = element("div", undefined, "askfolio__placard askfolio__placard--report");
+  placard.lang = document.documentElement.lang; // its label and its actions
+  placard.setAttribute("role", "group");
+  placard.setAttribute("aria-label", TEXT.aboutReport);
+  placard.dataset.askfolioPlacard = "report";
+  const actions = element("div", undefined, "askfolio__placard-actions");
+  for (const [store, text, className] of [
+    ["session", TEXT.ok, "askfolio__placard-ok"],
+    ["always", TEXT.never, "askfolio__placard-never"],
+  ]) {
+    const button = element("button", text, className);
+    button.type = "button";
+    button.dataset.askfolioClose = store;
+    actions.append(button);
+  }
+  const text = element("p", disclaimer, "askfolio__placard-text");
+  text.lang = language;
+  placard.append(text, actions);
+  return placard;
 }
 
 // ─── The page's message log (the service returns no history) ─────────────────────────────────
@@ -342,6 +472,8 @@ function refresh() {
   fresh.hidden = log.children.length === 0 && client.conversation === null;
   log.setAttribute("aria-busy", String(turning));
   panel.classList.toggle("is-busy", turning);
+  panel.classList.toggle("is-blocked", blocked !== null); // the closable notices step aside
+  showPrivacy();
   launcher.classList.toggle("is-busy", turning);
 }
 
@@ -353,6 +485,9 @@ function block(text, until, withContact = true) {
   notice.querySelector(".askfolio__contact").hidden = !withContact;
   announce(text);
   refresh();
+  if (document.activeElement?.closest("[data-askfolio-placard]:not(.askfolio__placard--report)")) {
+    fieldOf(view).focus(); // the notice it was in stepped aside
+  }
 }
 
 function unblock() {
@@ -583,6 +718,7 @@ function showView(next) {
   views.chat.hidden = next !== "chat";
   views.offer.hidden = next !== "offer";
   if (next === "offer") tabMark.hidden = true; // the report it pointed to is in view
+  showPrivacy();
   giveScroll();
   scrollLog();
 }
@@ -644,7 +780,20 @@ function topicName(value) {
 function showStarter() {
   const kind = scope.startsWith("project:") ? "project" : scope;
   for (const starter of starters) starter.hidden = starter.dataset.askfolioStarter !== kind;
+  edgeEmpty();
 }
+
+/** On a short panel the empty conversation scrolls inside itself: a fade on each edge with more. */
+function edgeEmpty() {
+  const { scrollTop, scrollHeight, clientHeight } = empty;
+  empty.classList.toggle("is-above", scrollTop > 1);
+  empty.classList.toggle("is-below", scrollTop + clientHeight < scrollHeight - 1);
+}
+
+empty.addEventListener("scroll", edgeEmpty, { passive: true });
+// The panel opening or resized, a notice closing, the invitation's lines rewrapping.
+const emptySizes = new ResizeObserver(edgeEmpty);
+for (const node of [empty, ...empty.querySelectorAll(".askfolio__starter")]) emptySizes.observe(node);
 
 /**
  * Switches to the topic `next`. A new topic ends the conversation now, so that coming back to the
@@ -717,6 +866,28 @@ question.addEventListener("focus", async () => {
   else if (result.error.kind !== "aborted" && !turning) fail(result.error, note);
 });
 
+/**
+ * The question field grows with the draft up to the room the view leaves it: the room under the
+ * header (less a blocking notice or a challenge in the strip above) minus the topic row, the
+ * smallest body and the rest of the composer, its notice and its action row included. Beyond it,
+ * the field scrolls inside itself, and Send stays in the panel. A panel too short for even that
+ * (a phone in landscape) keeps the field at its smallest and scrolls as a whole.
+ */
+function fitField() {
+  if (!panel.open || view !== "chat") return;
+  const main = views.chat.parentElement;
+  const body = Math.min(120, main.clientHeight * 0.1); // a share kept for the log above
+  const rest = topic.parentElement.offsetHeight + body + form.offsetHeight - question.offsetHeight;
+  const room = main.clientHeight - rest;
+  question.style.setProperty("--askfolio-room", `${Math.floor(room)}px`);
+}
+
+// The room changes with the panel's size, the strip's notice or challenge, a notice closing, the
+// view shown; the field's own growth leaves it as it is.
+const fieldRoom = new ResizeObserver(fitField);
+fieldRoom.observe(views.chat.parentElement);
+fieldRoom.observe(form);
+
 function limitsChanged() {
   count();
   showLimits();
@@ -783,6 +954,7 @@ form.addEventListener("submit", async (event) => {
     message: asked,
     onText: (text, isFinal) => {
       // The whole text so far: replace what is shown, never append. The final text wins.
+      used("chat");
       setStatus("");
       cancelAnimationFrame(frame);
       draw = () => {
@@ -796,7 +968,10 @@ form.addEventListener("submit", async (event) => {
         draw = null;
       } else frame = requestAnimationFrame(draw);
     },
-    onProgress: (progress) => setStatus(progressText(progress), progress.stage),
+    onProgress: (progress) => {
+      used("chat");
+      setStatus(progressText(progress), progress.stage);
+    },
     onConversationExpired: () => note(TEXT.expired, answer),
   });
   cancelAnimationFrame(frame); // no late frame: what streamed is drawn now, above any notice
@@ -806,6 +981,7 @@ form.addEventListener("submit", async (event) => {
   setStatus("");
   refresh();
   if (result.ok) {
+    used("chat");
     announce(answer.textContent); // the answer as text, before its sources are added
     showSources(answer, result.value.sources);
     keep(result.value.conversationId, asked, result.value.text);
@@ -868,6 +1044,7 @@ function show(next) {
   showing = next;
   offerForm.hidden = next !== "form";
   report.hidden = next !== "report";
+  showPrivacy(); // the form's notice leaves with the form
   if (view === "offer") giveScroll();
   refresh();
 }
@@ -954,7 +1131,10 @@ offerForm.addEventListener("submit", async (event) => {
   setStatus(TEXT.readingOffer);
   const result = await client.sendOffer({
     ...offer, // checked again by the client before it is sent
-    onProgress: (progress) => setStatus(progressText(progress, OFFER_TEXT), progress.stage),
+    onProgress: (progress) => {
+      used("offer");
+      setStatus(progressText(progress, OFFER_TEXT), progress.stage);
+    },
   });
   // Where the visitor is, read while Stop is still shown (hiding it would move a focus on it to
   // <body>): a focus on an offer field means they are working on the next offer, empty or not.
@@ -969,6 +1149,7 @@ offerForm.addEventListener("submit", async (event) => {
   // during the analysis.
   const sentFile = file !== undefined && offerPdf.files[0] === file;
   if (result.ok) {
+    used("offer");
     if (file === undefined && offerText.value === text) offerText.value = ""; // the offer sent
     if (sentFile) dropFile(); // leaves the page; the service stores none either
     showReport(result.value);
@@ -1010,9 +1191,10 @@ function sourceName(projectId) {
 
 /**
  * The report, as text only (textContent, never innerHTML; no Markdown): its disclaimer first,
- * the summary, the requirements (required ones first) with their match and evidence, the gaps,
- * the questions, and the note that a long offer was cut. The report is in the offer's language;
- * the words this script adds are in the page's, and say so.
+ * until the visitor closes it (nothing else does), the summary, the requirements (required ones
+ * first) with their match and evidence, the gaps, the questions, and the note that a long offer
+ * was cut. The report is in the offer's language; the words this script adds are in the page's,
+ * and say so.
  */
 function showReport(outcome) {
   if (outcome.kind === "refused") {
@@ -1056,7 +1238,7 @@ function showReport(outcome) {
   });
   report.lang = outcome.report.language; // the report is written in the offer's language
   report.replaceChildren(
-    element("p", disclaimer, "askfolio__disclaimer"), // first, always
+    ...(closed.has("report") ? [] : [reportNotice(disclaimer, outcome.report.language)]),
     ...(input.truncated ? [said("p", TEXT.truncated, "askfolio__truncated")] : []),
     said("h3", TEXT.summary),
     element("p", summary, "askfolio__summary"),

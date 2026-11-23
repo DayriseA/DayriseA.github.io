@@ -54,7 +54,7 @@
       <header class="doc__head" id="top">
         <h1>Confidentialité</h1>
         <p class="doc__lede">Ce que deviennent vos données quand vous visitez ce portfolio et utilisez son assistant IA, en termes&nbsp;simples.</p>
-        <p class="doc__date">Mise à jour le <time datetime="2026-11-23">23&nbsp;novembre 2026</time></p>
+        <p class="doc__date">Mise à jour le <time datetime="2026-11-24">24&nbsp;novembre 2026</time></p>
       </header>
 
       <nav class="doc__toc" aria-labelledby="toc-title">
@@ -177,12 +177,13 @@
 
         <section class="doc__part" aria-labelledby="navigateur">
           <h2 id="navigateur">Ce qui est stocké dans votre navigateur</h2>
-          <p>Le site et son assistant ne déposent aucun cookie. Dès que vous commencez à utiliser l’assistant, il conserve jusqu’à deux entrées dans le stockage de session de votre navigateur (<code>sessionStorage</code>), pour ce site uniquement&nbsp;:</p>
+          <p>Le site et son assistant ne déposent aucun cookie. Dès que vous commencez à utiliser l’assistant, il conserve jusqu’à deux entrées pour la conversation dans le stockage de session de votre navigateur (<code>sessionStorage</code>), pour ce site uniquement&nbsp;:</p>
           <ul class="ticks">
             <li><code>askfolio:session:https://askfolio-dayrise.fly.dev</code>&nbsp;: le jeton de session, son heure d’expiration, les limites d’utilisation de la session, ainsi que l’identifiant et le sujet de la conversation en cours&nbsp;;</li>
             <li><code>site:askfolio-log</code>, à partir de votre première question ayant reçu une réponse&nbsp;: l’identifiant de la conversation en cours, vos questions et les réponses affichées&nbsp;; elle est effacée quand une nouvelle conversation commence.</li>
           </ul>
           <p>Elles permettent de poursuivre la conversation quand vous rechargez la page ou passez du français à l’anglais dans le même onglet. Elles restent dans cet onglet et sont effacées quand vous le fermez&nbsp;; le jeton cesse de toute façon de fonctionner au bout de deux heures. Un rapport d’analyse d’offre n’est pas conservé dans votre navigateur. La vérification de Cloudflare s’exécute dans son propre cadre, selon la politique de Cloudflare.</p>
+          <p>L’assistant retient aussi les avis que vous avez fermés, sous <code>site:askfolio-notices</code>&nbsp;: la liste de ces avis, rien d’autre sur vous. Quand vous choisissez «&nbsp;OK&nbsp;», ou envoyez une question ou une offre pendant qu’un avis est affiché, elle est conservée dans le stockage de session jusqu’à la fermeture de l’onglet. Quand vous choisissez «&nbsp;Ne plus afficher&nbsp;», elle est conservée dans le stockage local de votre navigateur (<code>localStorage</code>) jusqu’à ce que vous effaciez les données de ce site.</p>
         </section>
 
         <section class="doc__part" aria-labelledby="droits">
