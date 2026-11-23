@@ -211,6 +211,29 @@ h2 {
   text-decoration-thickness: 2px;
 }
 
+/* A link that leaves for another site: the arrow points up and out */
+.link--out {
+  display: inline-flex;
+  align-items: center;
+  gap: .32em;
+}
+
+.link--out svg {
+  width: .72em;
+  height: .72em;
+  fill: none;
+  stroke: var(--lamp);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .2s ease;
+}
+
+.link--out:hover svg,
+.link--out:focus-visible svg {
+  transform: translate(1.5px, -1.5px);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -244,6 +267,13 @@ h2 {
 
 .btn svg.fill {
   fill: currentColor;
+  stroke: none;
+}
+
+/* A brand mark keeps its own colours */
+.btn svg.brand {
+  width: auto;
+  height: 18px;
   stroke: none;
 }
 
@@ -1078,25 +1108,132 @@ h1 span {
   font-size: .95em;
 }
 
-.project__note--private {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-style: italic;
-}
-
-.project__note--private svg {
-  flex: none;
-  width: 15px;
-  height: 15px;
-  transform: translateY(2px);
-  fill: none;
-  stroke: var(--haze);
-  stroke-width: 1.3;
-}
-
 .project .actions {
   margin-top: 28px;
+}
+
+/* The GitHub mark as the link to a project's code; struck through when the code is private */
+
+.gh {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--paper);
+  border-radius: 50%;
+}
+
+.gh svg {
+  width: var(--gh-size, 34px);
+  height: var(--gh-size, 34px);
+  overflow: visible;
+  fill: currentColor;
+  transition: transform .2s ease, color .2s;
+}
+
+a.gh:hover svg,
+a.gh:focus-visible svg {
+  color: var(--lamp-soft);
+  transform: scale(1.16);
+}
+
+.gh--private {
+  margin-left: -5px;
+  cursor: help;
+}
+
+.gh__mark {
+  opacity: .5;
+}
+
+.gh__bar {
+  fill: none;
+  stroke: #f0857a;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.gh__bar--under {
+  stroke: var(--night);
+  stroke-width: 3.4;
+}
+
+.tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  width: max-content;
+  max-width: 15.5em;
+  padding: 7px 12px 8px;
+  font: 400 .875rem/1.35 var(--sans);
+  letter-spacing: .01em;
+  text-align: left;
+  white-space: normal;
+  color: var(--moon);
+  background: var(--zenith);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, .6);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity .15s, transform .15s, visibility .15s;
+}
+
+.gh--private .tip {
+  left: 0;
+  transform: translate(0, 4px);
+}
+
+.gh:hover .tip,
+.gh:focus-visible .tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.gh--private:hover .tip,
+.gh--private:focus .tip {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+/* No hover on touch screens: the reason is written next to the struck mark instead */
+@media (hover: none) {
+  a.gh .tip {
+    display: none;
+  }
+
+  .gh--private {
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    gap: 12px;
+    justify-content: flex-start;
+    border-radius: 0;
+  }
+
+  .gh--private .tip,
+  .gh--private:focus .tip {
+    position: static;
+    max-width: 22em;
+    padding: 0;
+    font: italic 400 .95em/1.4 var(--serif);
+    letter-spacing: 0;
+    color: var(--moon-dim);
+    background: none;
+    border: 0;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
 }
 
 .stack {
@@ -1189,14 +1326,16 @@ h1 span {
   padding-right: 0;
   font: 500 1rem/1.5 var(--sans);
   white-space: nowrap;
+  vertical-align: middle;
 }
 
-.log__links a {
-  display: block;
-  width: fit-content;
+.log__links .gh {
+  --gh-size: 26px;
+  display: flex;
+  margin: -10px 0 -9px -9px;
 }
 
-.log__links a + a {
+.log__links .link + .gh {
   margin-top: 6px;
 }
 
@@ -1415,11 +1554,18 @@ h1 span {
 
   .log td.log__links {
     display: flex;
-    gap: 22px;
-    margin-top: 12px;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
   }
 
-  .log__links a + a {
+  .log__links .gh {
+    margin-block: 0;
+  }
+
+  /* Keep the mark first on the row, as in the entries without documentation */
+  .log__links .link + .gh {
+    order: -1;
     margin-top: 0;
   }
 }
