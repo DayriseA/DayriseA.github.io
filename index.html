@@ -545,6 +545,12 @@
       </div>
       <div class="vh" id="askfolio-live" aria-live="polite"></div>
     </div>
+    <div class="askfolio__resize askfolio__resize--top" role="separator" aria-orientation="horizontal" aria-label="Resize the panel: height" aria-describedby="askfolio-resize-help" aria-controls="askfolio" tabindex="0" data-askfolio-resize="height"></div>
+    <div class="askfolio__resize askfolio__resize--left" role="separator" aria-orientation="vertical" aria-label="Resize the panel: width" aria-describedby="askfolio-resize-help" aria-controls="askfolio" tabindex="0" data-askfolio-resize="width"></div>
+    <div class="askfolio__resize askfolio__resize--corner" aria-hidden="true" data-askfolio-resize="both">
+      <svg class="askfolio__grip" viewBox="0 0 18 18" focusable="false"><path d="M8.3 13.98 5.07 12.64M10.58 10.58 8.1 8.1M13.98 8.3 12.64 5.07"/></svg>
+    </div>
+    <p id="askfolio-resize-help" hidden>Use the arrow keys to resize, with Shift for larger steps; Home and End give the smallest and largest sizes; Enter restores the default size.</p>
   </dialog>
 
   <script src="index.js" defer></script>

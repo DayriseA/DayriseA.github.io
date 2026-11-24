@@ -6,7 +6,9 @@
 // job-offer analysis, where a recruiter pastes an offer or uploads it as a PDF and gets a report.
 // The client follows one conversation at a time: when a new one starts, the log folds the previous
 // one into a single collapsed entry, which the visitor may unfold to read it again. The floating
-// panel takes the height its content needs, up to just under the page's top bar.
+// panel takes the height its content needs, up to just under the page's top bar. The visitor may
+// resize it from its top edge, its left edge or its top-left corner, with the pointer or (the two
+// edges) the keyboard; a height set by hand replaces the content-driven one until the size is reset.
 // Three notices the visitor can close (placards) say what to know before using a view: the privacy
 // notice above the question, what an analysis will be above the offer, and each report's own
 // disclaimer above its summary. A closed notice is gone, for the tab ("OK") or for every visit
@@ -31,6 +33,9 @@ const LOG_KEY = "site:askfolio-log"; // the page's own copy of the messages it s
 // show again" (every visit). One key in both, holding a list of the ids below.
 const NOTICES_KEY = "site:askfolio-notices";
 const NOTICE_IDS = ["chat", "offer", "report"];
+// The floating panel's size the visitor set by hand, for the tab: { width, height } in CSS pixels,
+// each only once set.
+const SIZE_KEY = "site:askfolio-size";
 const STORES = { session: () => sessionStorage, always: () => localStorage }; // either may throw
 const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)");
 const lang = document.documentElement.lang.startsWith("fr") ? "fr" : "en";
@@ -40,6 +45,13 @@ const megabytes = (bytes) => number(Math.round(bytes / 104_857.6) / 10);
 
 // The floating panel needs room around it; below this, the panel is a full-screen sheet.
 const WIDE = window.matchMedia("(min-width: 700px) and (min-height: 560px)");
+// The sizes the visitor may give the floating panel, in CSS pixels: its width between `least` and
+// `most` (432, its default, in assistant.css), its height from `least` up to the room under the
+// page's top bar (its max-height); both within the window, whatever it allows.
+// The least height keeps the composer in view with the privacy notice shown, in either language;
+// what the strip may add for a while (a challenge, a notice) is held by holdComposer.
+const SIZES = { width: { least: 380, most: 760 }, height: { least: 500 } };
+const STEP = { small: 10, large: 50 }; // the resize keys' steps, the larger one with Shift
 
 // Every text the script writes. The markup holds the others, in each page's language, the topic
 // names included (the topic control's options); the AI disclosure comes from the client.
@@ -96,6 +108,9 @@ const TEXT = {
     aboutReport: "About this report",
     ok: "OK",
     never: "Don’t show again",
+    pixels: (count) => `${number(count)} pixels`,
+    automaticHeight: "automatic height",
+    defaultWidth: "default width",
   },
   fr: {
     newTopic: (name) => `Nouvelle conversation. Sujet : ${name}.`,
@@ -149,6 +164,9 @@ const TEXT = {
     aboutReport: "À propos de ce rapport",
     ok: "OK",
     never: "Ne plus afficher",
+    pixels: (count) => `${number(count)} pixels`,
+    automaticHeight: "hauteur automatique",
+    defaultWidth: "largeur par défaut",
   },
 }[lang];
 
@@ -204,6 +222,9 @@ const toReport = $("askfolio-to-report");
 // The notices of the markup, and the privacy link that stands for them once they are closed.
 const placards = { chat: $("askfolio-placard-chat"), offer: $("askfolio-placard-offer") };
 const privacy = $("askfolio-privacy");
+// The floating panel's resize handles: its top edge, its left edge (both focusable separators) and
+// its top-left corner (the pointer's only).
+const handles = panel.querySelectorAll("[data-askfolio-resize]");
 
 const client = new AskfolioClient({
   serviceUrl: SERVICE_URL,
@@ -225,6 +246,10 @@ let full = false; // the conversation in the log reached its maximum length: the
 let within = false; // the visitor's last click or focus was in the panel
 let grown = 0; // the height the floating panel's content asked for since it was opened, in px
 let opening = false; // the floating panel opened in this frame: it is sized before it is drawn
+let sized = null; // the size the visitor set by hand ({ width, height }), read when first needed
+let drag = null; // a resize drag under way
+let quiet = 0; // the presses on a handle in a row that did not drag: a double click resets
+let settling = null; // the animation back to the default size
 let view = "chat"; // the view shown: "chat" or "offer"
 let showing = "form"; // what the job-offer view shows: "form" or "report"
 const scrolls = { chat: null, form: 0, report: 0 }; // where each view was last scrolled, shown
@@ -676,6 +701,7 @@ function openPanel(focus) {
   if (panel.open) return;
   if (WIDE.matches) {
     panel.show();
+    applySize(); // the size the visitor gave it, within this window
     // At the height its content needs from the start, without growing in view; measured before
     // the first frame, once the caller's changes are in (a topic button folds a conversation).
     opening = true;
@@ -731,6 +757,8 @@ panel.addEventListener("keydown", (event) => {
 });
 
 panel.addEventListener("close", () => {
+  endDrag();
+  stopSettling();
   grown = 0; // the next opening starts again from the content it finds
   panel.style.removeProperty("--askfolio-grown");
   if (reopen !== null) {
@@ -764,9 +792,9 @@ window.visualViewport?.addEventListener("resize", fitSheet);
 window.visualViewport?.addEventListener("scroll", fitSheet);
 
 /**
- * The floating panel takes the height its content needs: CSS keeps it between a base height and
- * the room under the page's top bar (its max-height), its bottom edge fixed, from
- * `--askfolio-grown`. The need is the panel's height plus what its scrollers in view hold beyond
+ * The floating panel takes the height its content needs, unless the visitor set its height by hand
+ * (see applySize): CSS keeps it between a base height and the room under the page's top bar (its
+ * max-height), its bottom edge fixed, from `--askfolio-grown`. The need is the panel's height plus what its scrollers in view hold beyond
  * their own height, up to that room: once the content fits or the room is reached, a new
  * measurement changes nothing, so that the observers below settle. It never shrinks while the
  * panel stays open, so that a tab switched, a notice closed or a conversation
@@ -775,7 +803,7 @@ window.visualViewport?.addEventListener("scroll", fitSheet);
  * `instant` (by default while the panel is opening); otherwise CSS eases it.
  */
 function grow(instant = opening) {
-  if (!panel.open || panel.matches(":modal")) return;
+  if (!panel.open || panel.matches(":modal") || heightSet() || settling !== null) return;
   let more = 0;
   for (const scroller of [main, log, empty, sheet]) {
     if (scroller.getClientRects().length > 0) more += scroller.scrollHeight - scroller.clientHeight;
@@ -802,6 +830,7 @@ const queueGrow = () => {
   sizing ||= requestAnimationFrame(() => {
     sizing = 0;
     grow();
+    holdComposer();
   });
 };
 new MutationObserver(queueGrow).observe(main, {
@@ -819,6 +848,314 @@ panel.addEventListener("transitionend", (event) => {
   if (event.target === panel && event.propertyName === "height") queueGrow();
 });
 window.addEventListener("resize", queueGrow);
+
+// ─── The floating panel's size, set by the visitor ────────────────────────────────────────────
+
+/**
+ * The size the visitor gave the panel, from the tab's storage: a width and a height in CSS pixels,
+ * each only if it was set by hand. A value of another shape is ignored, never thrown on.
+ */
+function readSize() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(SIZE_KEY));
+    if (saved === null || typeof saved !== "object" || Array.isArray(saved)) return {};
+    const length = (value) => (Number.isFinite(value) && value > 0 ? value : undefined);
+    return { width: length(saved.width), height: length(saved.height) };
+  } catch {
+    return {};
+  }
+}
+
+function writeSize() {
+  const size = Object.entries(sized ?? {}).filter(([, value]) => value !== undefined);
+  try {
+    if (size.length === 0) sessionStorage.removeItem(SIZE_KEY);
+    else sessionStorage.setItem(SIZE_KEY, JSON.stringify(Object.fromEntries(size)));
+  } catch {
+    // Without storage, the size is kept for the page's life.
+  }
+}
+
+/** Whether the visitor set the panel's height by hand: the content no longer sets it. */
+function heightSet() {
+  return panel.classList.contains("is-height-set");
+}
+
+/**
+ * The sizes the window allows the floating panel, as [least, most] in CSS pixels: its height up to
+ * its max-height (the room under the top bar, which CSS keeps), its width up to the window less
+ * the margin on each side. The composer's floor (holdComposer) is no limit of the visitor's choice:
+ * CSS lays it over the height chosen, which it never replaces.
+ */
+function sizeLimits() {
+  const style = getComputedStyle(panel);
+  const room = parseFloat(style.maxHeight);
+  const across = document.documentElement.clientWidth - 2 * parseFloat(style.right);
+  return {
+    height: [Math.min(SIZES.height.least, room), room],
+    width: [Math.min(SIZES.width.least, across), Math.min(SIZES.width.most, across)],
+  };
+}
+
+const clampTo = (value, [least, most]) => Math.min(most, Math.max(least, value));
+
+/** The panel's size as laid out, in CSS pixels: never the opening's scale. */
+const panelSize = () => ({ width: panel.offsetWidth, height: panel.offsetHeight });
+
+/**
+ * Where one side is now, as the visitor's choice sees it: for a side set by hand, the size chosen
+ * within the window's limits (never the composer's floor laid over it); otherwise the size as laid
+ * out, an easing included.
+ */
+function sideNow(axis) {
+  if (sized?.[axis] !== undefined) return clampTo(sized[axis], sizeLimits()[axis]);
+  return panelSize()[axis];
+}
+
+/** Stops the easing back to the default size, where it is. */
+function stopSettling() {
+  const animation = settling;
+  settling = null;
+  animation?.cancel();
+}
+
+/**
+ * Gives the open floating panel the size the visitor chose, within what the window allows now: a
+ * width and a height set by hand go to CSS (`--askfolio-width`, `--askfolio-height`), which keeps
+ * them under the top bar and on screen at once whatever happens, and a height set by hand turns
+ * the content-driven one off. The choice itself is kept as it is: a window made smaller, then
+ * larger again, gives it back. The full-screen sheet ignores it (CSS).
+ */
+function applySize() {
+  if (!panel.open || panel.matches(":modal")) return;
+  sized ??= readSize();
+  const limits = sizeLimits();
+  for (const axis of ["width", "height"]) {
+    const value = sized[axis];
+    if (value === undefined) panel.style.removeProperty(`--askfolio-${axis}`);
+    else panel.style.setProperty(`--askfolio-${axis}`, `${clampTo(value, limits[axis])}px`);
+  }
+  panel.classList.toggle("is-height-set", sized.height !== undefined);
+  holdComposer();
+  describeSize(limits);
+}
+
+/**
+ * Under a height set by hand, the composer stays in view as it does under the content's height:
+ * when what is under the header no longer fits (a challenge or a notice in the strip, larger
+ * text), the panel takes the height it needs (CSS keeps it under the top bar), and gives it back
+ * once that is gone. Measured at the visitor's height, the question field fitted to it first.
+ */
+function holdComposer() {
+  panel.style.removeProperty("--askfolio-floor");
+  if (!panel.open || panel.matches(":modal") || !heightSet()) return;
+  fitField();
+  const over = main.scrollHeight - main.clientHeight;
+  if (over >= 1) panel.style.setProperty("--askfolio-floor", `${Math.ceil(panel.offsetHeight + over)}px`);
+}
+
+/** Sets one side by hand, within the limits; stored once the drag or the key is done. */
+function choose(axis, value) {
+  stopSettling();
+  sized ??= readSize();
+  sized[axis] = Math.round(clampTo(value, sizeLimits()[axis]));
+  applySize();
+}
+
+/**
+ * Back to the default size: the default width, and the height the content needs, measured at once;
+ * the panel then eases from the size it had to that one. Its stored entry goes.
+ */
+function resetSize() {
+  endDrag();
+  stopSettling();
+  sized = {};
+  writeSize();
+  if (!panel.open || panel.matches(":modal")) return;
+  const from = panelSize();
+  grown = 0; // measured again from the default
+  panel.style.removeProperty("--askfolio-grown");
+  panel.classList.add("is-sizing");
+  applySize();
+  grow(false);
+  const to = panelSize();
+  panel.classList.remove("is-sizing");
+  if (REDUCED.matches || (from.width === to.width && from.height === to.height)) return;
+  const size = (box) => ({ width: `${box.width}px`, height: `${box.height}px` });
+  const animation = panel.animate([size(from), size(to)], {
+    duration: 280,
+    easing: "cubic-bezier(.25, .8, .35, 1)",
+  });
+  settling = animation; // growth waits for its end: the content is measured at the final width
+  const done = () => {
+    if (settling !== animation) return;
+    settling = null;
+    queueGrow();
+  };
+  animation.finished.then(done, done);
+}
+
+/** The separators' values: the panel's size and the limits, in pixels, kept up to date. */
+function describeSize(limits = sizeLimits()) {
+  if (!panel.open || panel.matches(":modal")) return;
+  const box = panelSize();
+  for (const handle of handles) {
+    const axis = handle.dataset.askfolioResize;
+    if (!handle.hasAttribute("tabindex") || !(axis in limits)) continue; // the corner: pointer only
+    const now = Math.round(axis === "height" ? box.height : box.width);
+    const automatic = sized?.[axis] === undefined;
+    const kind = axis === "height" ? TEXT.automaticHeight : TEXT.defaultWidth;
+    handle.setAttribute("aria-valuemin", String(Math.round(limits[axis][0])));
+    handle.setAttribute("aria-valuemax", String(Math.round(limits[axis][1])));
+    handle.setAttribute("aria-valuenow", String(now));
+    handle.setAttribute("aria-valuetext", TEXT.pixels(now) + (automatic ? `, ${kind}` : ""));
+  }
+}
+
+// The panel resized (a drag, a key, the content's growth, an easing), and the window: the window's
+// limits apply again at once, and the separators say so.
+new ResizeObserver(() => describeSize()).observe(panel);
+window.addEventListener("resize", () => applySize());
+
+/**
+ * A drag on a handle, with the pointer captured (one pointer at a time): the panel's right and
+ * bottom edges stay where they are, the dragged edges follow the pointer, at most once a frame and
+ * without easing. Pressed, the panel stays exactly as it is drawn, an easing stopped where it was
+ * (frozen by an inline size until the drag changes that side), so that nothing moves before the
+ * pointer does; a drag of the left edge alone leaves the height to its rule, easing as it does. It starts once the pointer moved a few pixels, so that a click or a double click
+ * never sets a size, and a side becomes set by hand only once the drag changed its size: a drag
+ * against a limit leaves an automatic side automatic. Escape puts the size back as it was.
+ */
+function startDrag(event) {
+  const handle = event.currentTarget;
+  if (drag !== null || !event.isPrimary || event.button !== 0 || panel.matches(":modal")) return;
+  event.preventDefault(); // no focus moved, no text selected
+  sized ??= readSize();
+  const sides = handle.dataset.askfolioResize;
+  const drawn = panelSize(); // read before any easing stops
+  const from = { width: sideNow("width"), height: sideNow("height") };
+  panel.style.width = `${drawn.width}px`;
+  if (sides !== "width" || settling !== null) panel.style.height = `${drawn.height}px`;
+  stopSettling();
+  handle.setPointerCapture(event.pointerId);
+  drag = {
+    handle,
+    pointer: event.pointerId,
+    width: sides !== "height",
+    height: sides !== "width",
+    from: { x: event.clientX, y: event.clientY, ...from },
+    at: { x: event.clientX, y: event.clientY },
+    before: { ...sized },
+    moved: false,
+    changed: { width: false, height: false },
+    frame: 0,
+  };
+  handle.classList.add("is-active");
+  panel.classList.add("is-resizing");
+  panel.classList.toggle("is-resizing-height", drag.height); // its height follows, never eased
+  document.documentElement.dataset.askfolioResizing = sides; // the cursor, everywhere it goes
+}
+
+function moveDrag(event) {
+  if (drag === null || event.pointerId !== drag.pointer) return;
+  drag.at = { x: event.clientX, y: event.clientY };
+  drag.frame ||= requestAnimationFrame(dragFrame);
+}
+
+function dragFrame() {
+  drag.frame = 0;
+  const dx = drag.at.x - drag.from.x;
+  const dy = drag.at.y - drag.from.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 3) return;
+  drag.moved = true;
+  // The left edge moving left widens the panel; the top edge moving up makes it taller.
+  for (const [axis, delta] of [["width", dx], ["height", dy]]) {
+    if (!drag[axis]) continue;
+    const size = Math.round(clampTo(drag.from[axis] - delta, sizeLimits()[axis]));
+    if (!drag.changed[axis] && size === Math.round(drag.from[axis])) continue; // nothing changed yet
+    drag.changed[axis] = true;
+    panel.style.removeProperty(axis); // no longer frozen: the size chosen applies
+    choose(axis, size);
+  }
+}
+
+/**
+ * Ends the drag: kept, where the pointer was released (`at`), and stored, or, with `cancel`, put
+ * back as it was before.
+ */
+function endDrag({ cancel = false, at } = {}) {
+  if (drag === null) return;
+  cancelAnimationFrame(drag.frame);
+  if (cancel) {
+    sized = drag.before;
+    applySize();
+  } else {
+    if (at !== undefined) drag.at = at;
+    dragFrame();
+  }
+  const { handle, pointer, moved, changed } = drag;
+  drag = null;
+  if (handle.hasPointerCapture(pointer)) handle.releasePointerCapture(pointer);
+  handle.classList.remove("is-active");
+  panel.style.removeProperty("width"); // a side the drag left as it was: as before, easing on
+  panel.style.removeProperty("height");
+  holdComposer(); // measured again at the size chosen, unfrozen
+  panel.classList.remove("is-resizing", "is-resizing-height");
+  delete document.documentElement.dataset.askfolioResizing;
+  if (!cancel && (changed.width || changed.height)) writeSize();
+  quiet = moved ? 0 : quiet + 1;
+}
+
+/**
+ * The separators' keys: the arrows resize by a step (a larger one with Shift), toward a larger size
+ * with Up on the top edge and Left on the left edge; Home and End give the smallest and the largest
+ * size; Enter restores the default size. A separator takes all four arrows, so that none scrolls
+ * the page, and resizes only along its own axis. A step starts from the size chosen, never from
+ * the composer's floor laid over it.
+ */
+function resizeKey(event) {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+  if (event.key === "Enter") {
+    event.preventDefault();
+    return resetSize();
+  }
+  if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const axis = event.currentTarget.dataset.askfolioResize;
+  const now = sideNow(axis);
+  const step = event.shiftKey ? STEP.large : STEP.small;
+  const [larger, smaller] = axis === "height" ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"];
+  const [least, most] = sizeLimits()[axis];
+  const to = { [larger]: now + step, [smaller]: now - step, Home: least, End: most }[event.key];
+  if (to === undefined) return; // an arrow across its axis: taken, nothing to resize
+  choose(axis, to);
+  writeSize();
+}
+
+for (const handle of handles) {
+  handle.addEventListener("pointerdown", startDrag);
+  handle.addEventListener("pointermove", moveDrag);
+  // Only the pointer that started the drag ends it.
+  const own = (event) => drag !== null && event.pointerId === drag.pointer;
+  handle.addEventListener("pointerup", (event) => {
+    if (own(event)) endDrag({ at: { x: event.clientX, y: event.clientY } });
+  });
+  handle.addEventListener("pointercancel", (event) => own(event) && endDrag());
+  handle.addEventListener("lostpointercapture", (event) => own(event) && endDrag());
+  // A double click resets, unless one of its presses dragged.
+  handle.addEventListener("dblclick", () => {
+    if (quiet >= 2) resetSize();
+  });
+  if (handle.hasAttribute("tabindex")) handle.addEventListener("keydown", resizeKey);
+}
+
+// Escape during a drag puts the size back, and leaves the panel open.
+window.addEventListener("keydown", (event) => {
+  if (drag === null || event.key !== "Escape") return;
+  event.preventDefault();
+  event.stopPropagation();
+  endDrag({ cancel: true });
+}, true);
 
 // The launcher follows the page. It rises above the footer when the page reaches it, so that it
 // never covers the footer's link nor the contact buttons above it. On a phone, it shows its label

@@ -9,6 +9,7 @@
 .askfolio,
 .askfolio-launcher {
   --askfolio-edge: clamp(16px, 2vw, 28px);
+  --askfolio-measure: 35rem; /* the longest line of prose, about 75 characters, in a widened panel */
   --askfolio-case: #0b1943;
   --askfolio-well: rgba(5, 12, 38, .45);
   --askfolio-line: rgba(169, 187, 220, .3);
@@ -298,31 +299,43 @@
    never comes closer to than the gap. That room is its max-height, never animated, so that a
    window made shorter never pushes its header off screen; only the content's height eases.
    Growing, it rises calmly; a turn's own growth is instant, so that the streamed answer is followed
-   line by line, and so is the opening's. */
+   line by line, and so is the opening's. The visitor may resize it (see "Resizing" below): a width
+   or a height set by hand comes from assistant.js (--askfolio-width, --askfolio-height, within the
+   window's limits), and that height replaces the content's, without easing; only if the composer
+   would no longer fit under it (a challenge or a notice in the strip), the panel takes the height
+   the composer needs (--askfolio-floor), still under the top bar. */
 .askfolio:not(:modal) {
   --askfolio-bottom: max(var(--askfolio-edge), env(safe-area-inset-bottom));
   --askfolio-gap: min(var(--askfolio-edge), 20px);
+  --askfolio-room-top: calc(100dvh - 64px - var(--askfolio-gap) - var(--askfolio-bottom));
   position: fixed;
   inset: auto max(var(--askfolio-edge), env(safe-area-inset-right)) var(--askfolio-bottom) auto;
   z-index: 45;
-  width: min(432px, 100vw - 2 * var(--askfolio-edge));
-  height: max(740px, var(--askfolio-grown, 0px));
+  width: min(var(--askfolio-width, 432px), 100vw - 2 * var(--askfolio-edge));
+  height: var(--askfolio-height, max(740px, var(--askfolio-grown, 0px)));
   max-width: none;
-  max-height: calc(100dvh - 64px - var(--askfolio-gap) - var(--askfolio-bottom));
+  max-height: var(--askfolio-room-top);
   border-radius: 18px;
   box-shadow: 0 0 0 1px rgba(5, 12, 38, .6), 0 32px 80px -24px rgba(0, 0, 0, .85), 0 0 60px -30px rgba(246, 185, 79, .5);
   transform-origin: 100% 100%;
   transition: height .28s cubic-bezier(.25, .8, .35, 1);
 }
 
+.askfolio.is-height-set:not(:modal) {
+  min-height: min(var(--askfolio-floor, 0px), var(--askfolio-room-top)); /* never over the bar */
+}
+
 .askfolio.is-busy:not(:modal),
-.askfolio.is-sizing:not(:modal) {
+.askfolio.is-sizing:not(:modal),
+.askfolio.is-height-set:not(:modal),
+.askfolio.is-resizing-height:not(:modal) {
   transition: none;
 }
 
-/* Sized at the opening: what its new height changes inside (the layout for limited heights) is in
-   place at once, too. */
-.askfolio.is-sizing * {
+/* Sized at the opening, or by the visitor's drag: what its new size changes inside (the layout for
+   limited heights) is in place at once, too. */
+.askfolio.is-sizing *,
+.askfolio.is-resizing * {
   transition: none !important;
 }
 
@@ -960,7 +973,7 @@ html:has(.askfolio:modal) {
 /* The visitor's question: a compact warm transmission on the right. */
 .askfolio__log .is-visitor {
   align-self: flex-end;
-  max-width: 86%;
+  max-width: min(86%, var(--askfolio-measure));
   padding: 9px 15px 10px;
   font: 400 1rem/1.45 var(--sans);
   color: var(--paper);
@@ -1139,6 +1152,11 @@ html:has(.askfolio:modal) {
 
 .is-assistant > * + * {
   margin-top: .75em;
+}
+
+/* A widened panel keeps the prose readable; code and tables still take the whole width. */
+.is-assistant > :is(p, ul, ol, blockquote, h3, h4, h5, h6) {
+  max-width: var(--askfolio-measure);
 }
 
 .is-assistant p {
@@ -2018,6 +2036,15 @@ html:has(.askfolio:modal) {
   color: var(--moon-dim);
 }
 
+.askfolio__summary,
+.askfolio__need,
+.askfolio__evidence,
+.askfolio__gaps,
+.askfolio__asks,
+.askfolio__refusal {
+  max-width: var(--askfolio-measure); /* a widened panel keeps the report's prose readable */
+}
+
 .askfolio__summary {
   margin-top: 10px;
   font: 300 1.0625rem/1.6 var(--serif);
@@ -2195,6 +2222,192 @@ html:has(.askfolio:modal) {
   border: 1.5px solid var(--moon);
   border-radius: 50%;
   background: radial-gradient(circle, var(--moon) 0 1.6px, transparent 2px);
+}
+
+/* ---------- Resizing the floating panel ----------
+   Like a window, from the edges that move: the top one (its height), the left one (its width) and
+   the corner between them (both); the right and bottom edges stay in the launcher's corner. No
+   chrome: each edge is a thin strip along the border, reaching a few pixels outside the panel (its
+   clip margin lets it) and a few inside, short of the header's controls. Under the pointer, while
+   dragged or focused, the border lights up in lamp light, as everything the visitor can touch. The
+   corner carries the one permanent mark: three ticks along its curve, a dial's graduation, which
+   light up too. The full-screen sheet has none of this. */
+
+.askfolio__resize {
+  display: none;
+}
+
+.askfolio:not(:modal) {
+  --askfolio-reach: 4px; /* how far a handle reaches outside the border */
+  --askfolio-grasp: 5px; /* how far it reaches inside, from the border's outer edge */
+  --askfolio-corner: 15px; /* the corner's own reach inside */
+  overflow-clip-margin: var(--askfolio-reach);
+}
+
+/* A finger needs more: the header keeps its 44px targets, which start 15px inside. */
+@media (pointer: coarse) {
+  .askfolio:not(:modal) {
+    --askfolio-reach: 8px;
+    --askfolio-grasp: 9px;
+    --askfolio-corner: 22px;
+  }
+}
+
+/* Positioned from the padding box, inside the 1px border. */
+.askfolio:not(:modal) .askfolio__resize {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.askfolio__resize--top {
+  top: calc(-1px - var(--askfolio-reach));
+  left: calc(var(--askfolio-corner) - 2px);
+  right: 16px;
+  height: calc(var(--askfolio-reach) + var(--askfolio-grasp));
+  cursor: ns-resize;
+}
+
+.askfolio__resize--left {
+  top: calc(var(--askfolio-corner) - 2px);
+  bottom: 16px;
+  left: calc(-1px - var(--askfolio-reach));
+  width: calc(var(--askfolio-reach) + var(--askfolio-grasp));
+  cursor: ew-resize;
+}
+
+.askfolio__resize--corner {
+  top: calc(-1px - var(--askfolio-reach));
+  left: calc(-1px - var(--askfolio-reach));
+  width: calc(var(--askfolio-reach) + var(--askfolio-corner));
+  height: calc(var(--askfolio-reach) + var(--askfolio-corner));
+  cursor: nwse-resize;
+}
+
+/* The lit border: a lamp line over the panel's own, fading toward the rounded corners, with a soft
+   glow inside. Two pixels, so that one still shows where a browser clips the handle at the border. */
+.askfolio__resize--top::before,
+.askfolio__resize--left::before {
+  content: '';
+  position: absolute;
+  border-radius: 1px;
+  box-shadow: 0 0 10px 1px rgba(246, 185, 79, .45);
+  opacity: 0;
+  transition: opacity .18s ease-out .06s;
+}
+
+.askfolio__resize--top::before {
+  top: var(--askfolio-reach);
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(246, 185, 79, 0), var(--lamp) 18%, var(--lamp) 82%, rgba(246, 185, 79, 0));
+}
+
+.askfolio__resize--left::before {
+  top: 0;
+  bottom: 0;
+  left: var(--askfolio-reach);
+  width: 2px;
+  background: linear-gradient(rgba(246, 185, 79, 0), var(--lamp) 18%, var(--lamp) 82%, rgba(246, 185, 79, 0));
+}
+
+/* The corner's grip, on the panel's corner (its border-radius is 18px). */
+.askfolio__grip {
+  position: absolute;
+  top: var(--askfolio-reach);
+  left: var(--askfolio-reach);
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--moon-dim);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: .42;
+  transition: opacity .18s ease-out, stroke .18s ease-out;
+}
+
+@media (hover: hover) {
+  .askfolio__resize--top:hover::before,
+  .askfolio__resize--left:hover::before,
+  .askfolio:has(.askfolio__resize--corner:hover) :is(.askfolio__resize--top, .askfolio__resize--left)::before {
+    opacity: .75;
+  }
+
+  .askfolio__resize--corner:hover .askfolio__grip {
+    stroke: var(--lamp);
+    opacity: 1;
+  }
+}
+
+.askfolio__resize.is-active::before,
+.askfolio:has(.askfolio__resize--corner.is-active) :is(.askfolio__resize--top, .askfolio__resize--left)::before {
+  opacity: 1;
+}
+
+.askfolio__resize--corner.is-active .askfolio__grip {
+  stroke: var(--lamp);
+  opacity: 1;
+}
+
+/* From the keyboard: the lit border, and a lamp knob at its middle where the focus is. */
+.askfolio__resize:focus-visible {
+  outline: none;
+}
+
+.askfolio__resize:focus-visible::before {
+  opacity: 1;
+}
+
+.askfolio__resize--top:focus-visible::after,
+.askfolio__resize--left:focus-visible::after {
+  content: '';
+  position: absolute;
+  border-radius: 3px;
+  background: var(--lamp);
+  box-shadow: 0 0 0 2px var(--askfolio-case), 0 0 12px rgba(246, 185, 79, .8);
+}
+
+.askfolio__resize--top:focus-visible::after {
+  top: calc(var(--askfolio-reach) - 1px);
+  left: calc(50% - 16px);
+  width: 32px;
+  height: 5px;
+}
+
+.askfolio__resize--left:focus-visible::after {
+  top: calc(50% - 16px);
+  left: calc(var(--askfolio-reach) - 1px);
+  width: 5px;
+  height: 32px;
+}
+
+/* While a drag goes on, the cursor stays the handle's wherever the pointer goes, and nothing on the
+   page is selected. */
+:root[data-askfolio-resizing],
+:root[data-askfolio-resizing] * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+:root[data-askfolio-resizing] * {
+  cursor: inherit !important;
+}
+
+:root[data-askfolio-resizing="height"] {
+  cursor: ns-resize;
+}
+
+:root[data-askfolio-resizing="width"] {
+  cursor: ew-resize;
+}
+
+:root[data-askfolio-resizing="both"] {
+  cursor: nwse-resize;
 }
 
 /* ---------- Limited heights: a notice and the conversation together ----------
@@ -2468,6 +2681,21 @@ html:has(.askfolio:modal) {
 
   .askfolio__past[open] > summary {
     background: Canvas;
+  }
+
+  .askfolio .askfolio__resize::before,
+  .askfolio .askfolio__resize::after {
+    forced-color-adjust: none;
+    background: Highlight;
+    box-shadow: none;
+  }
+
+  .askfolio__grip {
+    stroke: CanvasText;
+  }
+
+  .askfolio__resize--corner:is(:hover, .is-active) .askfolio__grip {
+    stroke: Highlight;
   }
 }
 
