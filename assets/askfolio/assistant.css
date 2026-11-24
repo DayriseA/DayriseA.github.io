@@ -853,7 +853,7 @@ html:has(.askfolio:modal) {
   display: none;
 }
 
-/* An empty conversation invites a question, and suggests two or three that fit the topic. It rests
+/* An empty conversation invites a question, and suggests one or two that fit the topic. It rests
    on the composer; on a panel too short for it, it scrolls inside itself from its top (the auto
    margin, unlike flex-end, never pushes content out of reach), and a fade marks the edge that has
    more (assistant.js sets is-above and is-below). */

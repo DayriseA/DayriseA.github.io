@@ -199,6 +199,11 @@ const fresh = $("askfolio-new");
 const topic = $("askfolio-topic"); // the topic control: a <select> whose options name the topics
 const empty = $("askfolio-empty");
 const starters = empty.querySelectorAll("[data-askfolio-starter]");
+// The suggestions for some topics only: data-askfolio-scopes lists them. One without it fits every
+// topic of its starter, and those come first, in the markup's order, so that a list keeps its first
+// rows from one topic to the next: the topic-specific ones are moved after them.
+const scoped = [...empty.querySelectorAll(".askfolio__suggestions > [data-askfolio-scopes]")];
+for (const item of scoped) item.parentElement.append(item);
 const topicButtons = document.querySelectorAll("[data-askfolio-scope]"); // on the page
 const viewButtons = document.querySelectorAll("[data-askfolio-view]"); // on the page
 // The two views and their tabs, in the panel's header.
@@ -241,7 +246,6 @@ let scrolled = false; // the log has been scrolled to its latest messages once, 
 let reopen = null; // { focus } while the panel is reopened in the other mode
 let opener = null; // the topic button that opened the panel, which gets the focus back on close
 let pending = null; // a topic chosen on the page during a turn, applied when the turn ends
-let drafted = null; // the scope of the draft a topic button put in the field, while untouched
 let full = false; // the conversation in the log reached its maximum length: the next send folds it
 let within = false; // the visitor's last click or focus was in the panel
 let grown = 0; // the height the floating panel's content asked for since it was opened, in px
@@ -1257,10 +1261,17 @@ function topicName(value) {
   return [...topic.options].find((option) => option.value === value)?.text ?? value;
 }
 
-/** The invitation and the suggested questions that fit the topic, for the empty conversation. */
+/**
+ * The invitation and the suggested questions that fit the topic, for the empty conversation. A
+ * suggestion for other topics is hidden: neither the Tab key nor assistive technology reaches it.
+ */
 function showStarter() {
   const kind = scope.startsWith("project:") ? "project" : scope;
   for (const starter of starters) starter.hidden = starter.dataset.askfolioStarter !== kind;
+  for (const item of scoped) {
+    // Any whitespace separates the scopes, so the attribute may be wrapped over several lines.
+    item.hidden = !item.dataset.askfolioScopes.trim().split(/\s+/).includes(scope);
+  }
   edgeEmpty();
 }
 
@@ -1279,9 +1290,9 @@ for (const node of [empty, ...empty.querySelectorAll(".askfolio__starter")]) emp
 /**
  * Switches to the topic `next`. A new topic ends the conversation now, so that coming back to the
  * previous topic never continues it (the client alone would continue a conversation whose scope
- * matches again): the log folds it, and the new topic's invitation shows under it. A topic
- * button's draft the visitor left untouched goes with its topic. During a turn, the change waits
- * for the turn's end: the turn keeps the scope it was sent in.
+ * matches again): the log folds it, and the new topic's invitation shows under it. What the
+ * visitor wrote stays in the field. During a turn, the change waits for the turn's end: the turn
+ * keeps the scope it was sent in.
  */
 function setTopic(next) {
   if (turning) {
@@ -1295,11 +1306,6 @@ function setTopic(next) {
   fold(); // named after the topic it was about
   scope = next;
   showStarter();
-  if (drafted !== null && drafted !== next) {
-    question.value = "";
-    drafted = null;
-    count();
-  }
   if (shown) startOver();
   refresh();
 }
@@ -1312,10 +1318,9 @@ function startOver() {
 
 topic.addEventListener("change", () => setTopic(topic.value));
 
-// A topic button: opens the panel if it is closed, switches the topic, offers its draft (never
-// sent by itself) and moves the focus to the question. The draft goes in an empty field, or
-// replaces a draft the visitor left untouched; what the visitor wrote or chose is kept. The focus
-// coming into the panel asks health again when a notice's time has passed (see recheck).
+// A topic button: opens the panel if it is closed, switches the topic and moves the focus to the
+// question, where what the visitor wrote stays. The focus coming into the panel asks health again
+// when a notice's time has passed (see recheck).
 document.addEventListener("click", (event) => {
   const button = event.target.closest?.("[data-askfolio-scope]");
   if (button === null || button === undefined || button.hidden) return;
@@ -1323,12 +1328,6 @@ document.addEventListener("click", (event) => {
   showView("chat");
   openPanel(null); // open first, so that a new conversation is announced from the panel
   setTopic(button.dataset.askfolioScope);
-  const draft = button.dataset.askfolioDraft;
-  if (draft !== undefined && (question.value === "" || drafted !== null)) {
-    question.value = draft;
-    drafted = button.dataset.askfolioScope;
-    count();
-  }
   question.focus();
 });
 
@@ -1337,7 +1336,6 @@ empty.addEventListener("click", (event) => {
   const suggestion = event.target.closest(".askfolio__suggestion");
   if (suggestion === null) return;
   question.value = suggestion.textContent.trim();
-  drafted = null; // the visitor's choice
   count();
   question.focus();
 });
@@ -1355,7 +1353,7 @@ question.addEventListener("focus", async () => {
 });
 
 /**
- * The question field grows with the draft up to the room the view leaves it: the room under the
+ * The question field grows with its text up to the room the view leaves it: the room under the
  * header (less a blocking notice or a challenge in the strip above) minus the topic row, the
  * smallest body and the rest of the composer, its notice and its action row included. Beyond it,
  * the field scrolls inside itself, and Send stays in the panel. A panel too short for even that
@@ -1380,10 +1378,7 @@ function limitsChanged() {
   showLimits();
 }
 
-question.addEventListener("input", () => {
-  drafted = null; // the visitor's own text now, whatever it says
-  count();
-});
+question.addEventListener("input", count);
 
 question.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
@@ -1424,7 +1419,6 @@ form.addEventListener("submit", async (event) => {
   const length = messageLength(asked);
   if (turning || blocked !== null || length === 0 || length > client.limits.maxMessageChars) return;
   question.value = ""; // cleared now: what the visitor types during the turn is kept
-  drafted = null;
   count();
   if (full) fold(); // the conversation that reached its maximum length: this message starts anew
   const sent = bubble("visitor", asked);
