@@ -222,6 +222,7 @@ let opener = null; // the topic button that opened the panel, which gets the foc
 let pending = null; // a topic chosen on the page during a turn, applied when the turn ends
 let drafted = null; // the scope of the draft a topic button put in the field, while untouched
 let full = false; // the conversation in the log reached its maximum length: the next send folds it
+let within = false; // the visitor's last click or focus was in the panel
 let grown = 0; // the height the floating panel's content asked for since it was opened, in px
 let opening = false; // the floating panel opened in this frame: it is sized before it is drawn
 let view = "chat"; // the view shown: "chat" or "offer"
@@ -364,7 +365,13 @@ function reportNotice(disclaimer, language) {
 
 function readLog() {
   try {
-    return JSON.parse(sessionStorage.getItem(LOG_KEY)) ?? {};
+    const saved = JSON.parse(sessionStorage.getItem(LOG_KEY));
+    const valid = (item) =>
+      Array.isArray(item) &&
+      ["visitor", "assistant"].includes(item[0]) &&
+      typeof item[1] === "string";
+    // A record of another shape (another script, an older version of this one) is ignored.
+    return Array.isArray(saved?.items) && saved.items.every(valid) ? saved : {};
   } catch {
     return {};
   }
@@ -1132,7 +1139,7 @@ form.addEventListener("submit", async (event) => {
   const active = document.activeElement;
   turning = false;
   setStatus("");
-  refresh();
+  limitsChanged(); // the send may have opened or renewed the session: its limits apply
   if (result.ok) {
     used("chat");
     announce(answer.textContent); // the answer as text, before its sources are added
@@ -1224,6 +1231,13 @@ offerText.addEventListener("input", () => {
   // field, where the visitor is typing, stays where it is
 });
 
+// Where the visitor last clicked or moved the focus: a report takes the focus only from the panel.
+for (const type of ["pointerdown", "focusin"]) {
+  document.addEventListener(type, (event) => {
+    within = panel.contains(event.target);
+  });
+}
+
 // As for the question: a session is opened (Turnstile runs) while the visitor pastes or picks.
 for (const field of [offerText, offerPdf]) {
   field.addEventListener("focus", async () => {
@@ -1291,8 +1305,10 @@ offerForm.addEventListener("submit", async (event) => {
   });
   // Where the visitor is, read while Stop is still shown (hiding it would move a focus on it to
   // <body>): a focus on an offer field means they are working on the next offer, empty or not.
+  // A focus on <body> still counts as in the panel when the visitor's last click or focus was
+  // there: some browsers give a clicked button no focus, so Analyze leaves it on <body>.
   const active = document.activeElement;
-  const inPanel = panel.contains(active);
+  const inPanel = panel.contains(active) || (active === document.body && within);
   const working = offerForm.contains(active) && active.matches("textarea, input");
   const typing = working || (active?.matches?.("textarea, input") && active.value !== "");
   turning = false;
@@ -1311,15 +1327,17 @@ offerForm.addEventListener("submit", async (event) => {
     // "See the report", and its summary is announced either way.
     if (!working) show("report");
     if (showing === "report" && view === "offer") giveScroll(); // a report replacing a report
-    refresh();
+    limitsChanged(); // as after a message: the session's limits apply
     // The focus moves to the report only from inside the panel: never from the page around a
     // floating panel, nor from a field the visitor is typing in.
     if (view !== "offer") tabMark.hidden = false;
-    else if (showing === "report" && !typing && inPanel) report.focus({ preventScroll: true });
+    else if (panel.open && showing === "report" && !typing && inPanel) {
+      report.focus({ preventScroll: true });
+    }
   } else {
     const lost = report.contains(document.activeElement); // the report, about to be hidden
     show("form"); // the message is under the form
-    refresh();
+    limitsChanged();
     if (lost) (file === undefined ? offerText : offerPdf).focus(); // the field that was sent
     const refused = result.error.kind === "http" ? REFUSED_OFFER[result.error.code] : undefined;
     if (refused === undefined) fail(result.error, offerProblem, OFFER_TEXT);
