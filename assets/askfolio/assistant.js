@@ -4,6 +4,9 @@
 // wide screens, so the page stays readable and scrollable, and a full-screen modal sheet on narrow
 // ones. The panel has two views, switched by tabs in its header: the conversation, and the
 // job-offer analysis, where a recruiter pastes an offer or uploads it as a PDF and gets a report.
+// The client follows one conversation at a time: when a new one starts, the log folds the previous
+// one into a single collapsed entry, which the visitor may unfold to read it again. The floating
+// panel takes the height its content needs, up to just under the page's top bar.
 // Three notices the visitor can close (placards) say what to know before using a view: the privacy
 // notice above the question, what an analysis will be above the offer, and each report's own
 // disclaimer above its summary. A closed notice is gone, for the tab ("OK") or for every visit
@@ -43,6 +46,8 @@ const WIDE = window.matchMedia("(min-width: 700px) and (min-height: 560px)");
 const TEXT = {
   en: {
     newTopic: (name) => `New conversation. Topic: ${name}.`,
+    past: (name) => `Previous conversation: ${name}`,
+    asked: (count) => (count === 1 ? "1 question" : `${number(count)} questions`),
     waiting: "Waiting for the assistant…",
     searching: "Looking through the files…",
     reading: (path) => `Reading ${path}`,
@@ -94,6 +99,8 @@ const TEXT = {
   },
   fr: {
     newTopic: (name) => `Nouvelle conversation. Sujet : ${name}.`,
+    past: (name) => `Conversation précédente : ${name}`,
+    asked: (count) => (count === 1 ? "1 question" : `${number(count)} questions`),
     waiting: "En attente de l’assistant…",
     searching: "Recherche dans les fichiers…",
     reading: (path) => `Lecture de ${path}`,
@@ -180,6 +187,7 @@ const viewButtons = document.querySelectorAll("[data-askfolio-view]"); // on the
 const tabs = [...panel.querySelectorAll('[role="tab"]')];
 const views = { chat: $("askfolio-view-chat"), offer: $("askfolio-view-offer") };
 const tabMark = $("askfolio-tab-mark"); // a report arrived while the conversation was shown
+const main = panel.querySelector(".askfolio__main"); // both views, under the header
 // The job-offer view: its form, then the report that replaces it once one arrives.
 const sheet = $("askfolio-sheet");
 const offerForm = $("askfolio-offer");
@@ -213,6 +221,9 @@ let reopen = null; // { focus } while the panel is reopened in the other mode
 let opener = null; // the topic button that opened the panel, which gets the focus back on close
 let pending = null; // a topic chosen on the page during a turn, applied when the turn ends
 let drafted = null; // the scope of the draft a topic button put in the field, while untouched
+let full = false; // the conversation in the log reached its maximum length: the next send folds it
+let grown = 0; // the height the floating panel's content asked for since it was opened, in px
+let opening = false; // the floating panel opened in this frame: it is sized before it is drawn
 let view = "chat"; // the view shown: "chat" or "offer"
 let showing = "form"; // what the job-offer view shows: "form" or "report"
 const scrolls = { chat: null, form: 0, report: 0 }; // where each view was last scrolled, shown
@@ -401,6 +412,7 @@ function bubble(who, text = "") {
   const item = log.appendChild(element("li", undefined, `is-${who}`));
   if (who === "assistant") item.replaceChildren(renderMarkdown(text));
   else item.textContent = text;
+  showStarted();
   return item;
 }
 
@@ -410,9 +422,61 @@ function note(text, before = null, className = "is-note") {
   // that showed its latest messages keeps showing them.
   const following = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
   log.insertBefore(element("li", text, className), before);
+  showStarted();
+  grow();
   if (before === null || following) log.scrollTop = log.scrollHeight;
   announce(text);
   refresh();
+}
+
+/** The entries of the conversation the client follows: those after the last folded conversation. */
+function current() {
+  const items = [...log.children];
+  return items.slice(items.findLastIndex((item) => item.classList.contains("is-past")) + 1);
+}
+
+/**
+ * The log's state for the layout: whether the current conversation shows anything yet. Until it
+ * does, its invitation and suggestions are shown under the folded conversations (CSS).
+ */
+function showStarted() {
+  log.classList.toggle("is-started", current().length > 0);
+}
+
+/**
+ * Folds `items`, the entries of a conversation that has ended, into one collapsed entry at their
+ * place in the log, named after its topic (the topic control's option) and its number of
+ * questions: a native <details>, which the keyboard and screen readers operate, and whose folded
+ * content is out of the focus order. The nodes move as they are, never drawn again. Notes alone (a
+ * failed connection) are no conversation: they go. Call it before the topic changes.
+ */
+function fold(items = current()) {
+  full = false;
+  writeLog(null); // the stored copy belonged to the conversation that ends
+  if (items.length === 0) return;
+  if (!items.some((item) => item.matches(".is-visitor, .is-assistant"))) {
+    for (const item of items) item.remove();
+    return showStarted();
+  }
+  const asked = items.filter((item) => item.classList.contains("is-visitor")).length;
+  // A focus inside them (an answer's link or sources) would fall to the page once they are folded:
+  // it goes to the folded entry's row instead.
+  const focused = items.some((item) => item.contains(document.activeElement));
+  const summary = element("summary");
+  summary.append(
+    element("span", TEXT.past(topicName(scope)), "askfolio__past-name"),
+    element("span", ", ", "vh"), // read between the two, which only the layout separates
+    element("span", TEXT.asked(asked), "askfolio__past-count"),
+  );
+  const past = element("ol", undefined, "askfolio__past-log");
+  const details = element("details", undefined, "askfolio__past");
+  const entry = element("li", undefined, "is-past");
+  log.insertBefore(entry, items[0]);
+  past.append(...items);
+  details.append(summary, past);
+  entry.append(details);
+  if (focused) summary.focus();
+  showStarted();
 }
 
 /** Scrolls the log, not the page, so that `item` is at its top. Instant: no motion to reduce. */
@@ -469,7 +533,9 @@ function refresh() {
   toReport.hidden = showing !== "form" || report.childNodes.length === 0;
   fresh.disabled = turning;
   topic.disabled = turning; // a turn keeps the scope it was sent in
-  fresh.hidden = log.children.length === 0 && client.conversation === null;
+  // Nothing to start again: the current conversation shows nothing and the client follows none.
+  fresh.hidden = current().length === 0 && client.conversation === null;
+  showStarted();
   log.setAttribute("aria-busy", String(turning));
   panel.classList.toggle("is-busy", turning);
   panel.classList.toggle("is-blocked", blocked !== null); // the closable notices step aside
@@ -584,6 +650,8 @@ function fail(error, say, words = TEXT) {
       }
       if (error.code === "conversation_limit") {
         client.newConversation();
+        writeLog(null); // its stored copy goes with it; it stays in view until the next send
+        full = true; // folds it, with this note
         return say(words.full);
       }
       if (error.code === "invalid_scope") return say(words.badTopic);
@@ -599,8 +667,18 @@ function fail(error, say, words = TEXT) {
  */
 function openPanel(focus) {
   if (panel.open) return;
-  if (WIDE.matches) panel.show();
-  else {
+  if (WIDE.matches) {
+    panel.show();
+    // At the height its content needs from the start, without growing in view; measured before
+    // the first frame, once the caller's changes are in (a topic button folds a conversation).
+    opening = true;
+    requestAnimationFrame(() => {
+      const end = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
+      grow(true);
+      opening = false;
+      if (end && view === "chat") log.scrollTop = log.scrollHeight; // the latest messages still
+    });
+  } else {
     fitSheet();
     panel.showModal(); // the browser makes the page inert, traps the focus and handles Escape
   }
@@ -646,6 +724,8 @@ panel.addEventListener("keydown", (event) => {
 });
 
 panel.addEventListener("close", () => {
+  grown = 0; // the next opening starts again from the content it finds
+  panel.style.removeProperty("--askfolio-grown");
   if (reopen !== null) {
     const { focus } = reopen;
     reopen = null;
@@ -675,6 +755,63 @@ function fitSheet() {
 
 window.visualViewport?.addEventListener("resize", fitSheet);
 window.visualViewport?.addEventListener("scroll", fitSheet);
+
+/**
+ * The floating panel takes the height its content needs: CSS keeps it between a base height and
+ * the room under the page's top bar (its max-height), its bottom edge fixed, from
+ * `--askfolio-grown`. The need is the panel's height plus what its scrollers in view hold beyond
+ * their own height, up to that room: once the content fits or the room is reached, a new
+ * measurement changes nothing, so that the observers below settle. It never shrinks while the
+ * panel stays open, so that a tab switched, a notice closed or a conversation
+ * folded never makes its top edge bounce; the next opening starts again from its content. Growth
+ * is instant during a turn (CSS), so that a streamed answer is followed line by line, and when
+ * `instant` (by default while the panel is opening); otherwise CSS eases it.
+ */
+function grow(instant = opening) {
+  if (!panel.open || panel.matches(":modal")) return;
+  let more = 0;
+  for (const scroller of [main, log, empty, sheet]) {
+    if (scroller.getClientRects().length > 0) more += scroller.scrollHeight - scroller.clientHeight;
+  }
+  const room = parseFloat(getComputedStyle(panel).maxHeight);
+  const needed = Math.min(Math.ceil(panel.offsetHeight + more), Math.floor(room));
+  if (more < 1 || needed <= grown) return;
+  grown = needed;
+  if (instant) panel.classList.add("is-sizing");
+  panel.style.setProperty("--askfolio-grown", `${grown}px`);
+  if (instant) {
+    void panel.offsetHeight; // the new height is laid out before the transition comes back
+    panel.classList.remove("is-sizing");
+  }
+}
+
+// Anything that may need more room, outside a turn's own drawing (which grows at once): an entry
+// folded or unfolded, a report, a view shown (mutations in the views); what resizes the room under
+// the header or the composer from elsewhere: the challenge or a notice in the strip, the question
+// field growing, the layout for limited heights (sizes); the window; and once an eased growth has
+// ended, what it left to show. Once per frame.
+let sizing = 0;
+const queueGrow = () => {
+  sizing ||= requestAnimationFrame(() => {
+    sizing = 0;
+    grow();
+  });
+};
+new MutationObserver(queueGrow).observe(main, {
+  subtree: true,
+  childList: true,
+  characterData: true,
+  attributes: true,
+  attributeFilter: ["open", "hidden"],
+});
+const growSizes = new ResizeObserver(queueGrow);
+for (const node of [main, form, question, panel.querySelector(".askfolio__signal"), ...starters]) {
+  growSizes.observe(node);
+}
+panel.addEventListener("transitionend", (event) => {
+  if (event.target === panel && event.propertyName === "height") queueGrow();
+});
+window.addEventListener("resize", queueGrow);
 
 // The launcher follows the page. It rises above the footer when the page reaches it, so that it
 // never covers the footer's link nor the contact buttons above it. On a phone, it shows its label
@@ -798,9 +935,9 @@ for (const node of [empty, ...empty.querySelectorAll(".askfolio__starter")]) emp
 /**
  * Switches to the topic `next`. A new topic ends the conversation now, so that coming back to the
  * previous topic never continues it (the client alone would continue a conversation whose scope
- * matches again); a log that shows messages gets a divider. A topic button's draft the visitor
- * left untouched goes with its topic. During a turn, the change waits for the turn's end: the turn
- * keeps the scope it was sent in.
+ * matches again): the log folds it, and the new topic's invitation shows under it. A topic
+ * button's draft the visitor left untouched goes with its topic. During a turn, the change waits
+ * for the turn's end: the turn keeps the scope it was sent in.
  */
 function setTopic(next) {
   if (turning) {
@@ -809,17 +946,24 @@ function setTopic(next) {
   }
   topic.value = next;
   if (next === scope) return;
-  scope = next;
+  const shown = current().length > 0;
   client.newConversation();
+  fold(); // named after the topic it was about
+  scope = next;
   showStarter();
   if (drafted !== null && drafted !== next) {
     question.value = "";
     drafted = null;
     count();
   }
-  if (log.children.length > 0) {
-    note(TEXT.newTopic(topicName(next)), null, "is-note is-divider"); // announced, like every note
-  }
+  if (shown) startOver();
+  refresh();
+}
+
+/** After a conversation was folded: the latest folded ones in view, and the change announced. */
+function startOver() {
+  log.scrollTop = log.scrollHeight;
+  announce(TEXT.newTopic(topicName(scope)));
 }
 
 topic.addEventListener("change", () => setTopic(topic.value));
@@ -833,7 +977,7 @@ document.addEventListener("click", (event) => {
   if (button === null || button === undefined || button.hidden) return;
   opener = button;
   showView("chat");
-  openPanel(null); // open first, so that a divider is announced from the panel
+  openPanel(null); // open first, so that a new conversation is announced from the panel
   setTopic(button.dataset.askfolioScope);
   const draft = button.dataset.askfolioDraft;
   if (draft !== undefined && (question.value === "" || drafted !== null)) {
@@ -875,7 +1019,6 @@ question.addEventListener("focus", async () => {
  */
 function fitField() {
   if (!panel.open || view !== "chat") return;
-  const main = views.chat.parentElement;
   const body = Math.min(120, main.clientHeight * 0.1); // a share kept for the log above
   const rest = topic.parentElement.offsetHeight + body + form.offsetHeight - question.offsetHeight;
   const room = main.clientHeight - rest;
@@ -885,7 +1028,7 @@ function fitField() {
 // The room changes with the panel's size, the strip's notice or challenge, a notice closing, the
 // view shown; the field's own growth leaves it as it is.
 const fieldRoom = new ResizeObserver(fitField);
-fieldRoom.observe(views.chat.parentElement);
+fieldRoom.observe(main);
 fieldRoom.observe(form);
 
 function limitsChanged() {
@@ -920,11 +1063,13 @@ function leaveStop(active) {
   }
 }
 
+// "New conversation" folds the current one, as a new topic does, and keeps the topic.
 fresh.addEventListener("click", () => {
+  const shown = current().length > 0;
   client.newConversation();
-  writeLog(null);
-  log.replaceChildren();
+  fold(); // its stored copy cleared too
   refresh(); // hides this button: the focus moves to the question
+  if (shown) startOver();
   question.focus();
 });
 
@@ -937,8 +1082,10 @@ form.addEventListener("submit", async (event) => {
   question.value = ""; // cleared now: what the visitor types during the turn is kept
   drafted = null;
   count();
+  if (full) fold(); // the conversation that reached its maximum length: this message starts anew
   const sent = bubble("visitor", asked);
   const answer = bubble("assistant");
+  grow(true); // a turn's growth is instant, from its first line
   log.scrollTop = log.scrollHeight; // the question in view, its answer below it
   let frame = 0;
   let draw = null;
@@ -960,6 +1107,7 @@ form.addEventListener("submit", async (event) => {
       draw = () => {
         const following = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
         answer.replaceChildren(renderMarkdown(text));
+        grow(); // the floating panel first, up to its full height; then the log scrolls
         if (following) reveal(sent); // until the question reaches the top; never once scrolled
       };
       if (isFinal) {
@@ -972,7 +1120,12 @@ form.addEventListener("submit", async (event) => {
       used("chat");
       setStatus(progressText(progress), progress.stage);
     },
-    onConversationExpired: () => note(TEXT.expired, answer),
+    // Sent again in a new conversation: what came before this question is the previous one.
+    onConversationExpired: () => {
+      const items = current();
+      fold(items.slice(0, Math.max(0, items.indexOf(sent))));
+      note(TEXT.expired, answer);
+    },
   });
   cancelAnimationFrame(frame); // no late frame: what streamed is drawn now, above any notice
   draw?.();

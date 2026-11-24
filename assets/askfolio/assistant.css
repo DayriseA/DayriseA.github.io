@@ -292,19 +292,38 @@
   animation: askfolio-open .22s ease-out;
 }
 
-/* Wide screens: a floating panel in the launcher's corner; the page stays usable around it. */
+/* Wide screens: a floating panel in the launcher's corner; the page stays usable around it. Its
+   bottom edge stays where it is; it is as tall as its content needs (assistant.js measures it into
+   --askfolio-grown), from a base height up to the room under the 64px top bar, which its top edge
+   never comes closer to than the gap. That room is its max-height, never animated, so that a
+   window made shorter never pushes its header off screen; only the content's height eases.
+   Growing, it rises calmly; a turn's own growth is instant, so that the streamed answer is followed
+   line by line, and so is the opening's. */
 .askfolio:not(:modal) {
+  --askfolio-bottom: max(var(--askfolio-edge), env(safe-area-inset-bottom));
+  --askfolio-gap: min(var(--askfolio-edge), 20px);
   position: fixed;
-  inset: auto max(var(--askfolio-edge), env(safe-area-inset-right)) max(var(--askfolio-edge), env(safe-area-inset-bottom)) auto;
+  inset: auto max(var(--askfolio-edge), env(safe-area-inset-right)) var(--askfolio-bottom) auto;
   z-index: 45;
   width: min(432px, 100vw - 2 * var(--askfolio-edge));
-  /* Never higher than the viewport under the 64px top bar. */
-  height: min(740px, 100dvh - 64px - 2 * var(--askfolio-edge));
+  height: max(740px, var(--askfolio-grown, 0px));
   max-width: none;
-  max-height: none;
+  max-height: calc(100dvh - 64px - var(--askfolio-gap) - var(--askfolio-bottom));
   border-radius: 18px;
   box-shadow: 0 0 0 1px rgba(5, 12, 38, .6), 0 32px 80px -24px rgba(0, 0, 0, .85), 0 0 60px -30px rgba(246, 185, 79, .5);
   transform-origin: 100% 100%;
+  transition: height .28s cubic-bezier(.25, .8, .35, 1);
+}
+
+.askfolio.is-busy:not(:modal),
+.askfolio.is-sizing:not(:modal) {
+  transition: none;
+}
+
+/* Sized at the opening: what its new height changes inside (the layout for limited heights) is in
+   place at once, too. */
+.askfolio.is-sizing * {
+  transition: none !important;
 }
 
 /* Narrow screens: a full-screen modal sheet that follows the visual viewport. */
@@ -808,7 +827,8 @@ html:has(.askfolio:modal) {
   scroll-behavior: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(169, 187, 220, .3) transparent;
-  padding: 22px 20px 44px;
+  --askfolio-log-top: 22px; /* its top padding, which an unfolded entry's row sticks over */
+  padding: var(--askfolio-log-top) 20px 44px;
 }
 
 .askfolio:modal .askfolio__log,
@@ -918,7 +938,22 @@ html:has(.askfolio:modal) {
   }
 }
 
-.askfolio__log:not(:empty) + .askfolio__empty {
+/* The current conversation started: its invitation leaves (assistant.js sets is-started). */
+.askfolio__log.is-started + .askfolio__empty {
+  display: none;
+}
+
+/* A new conversation under folded past ones: they stay at the top of the log, which gives way
+   before the invitation does but keeps at least their first row in view; the invitation rests on
+   the composer, as on a first open. While the visitor reads a past conversation they unfolded, it
+   steps aside and gives the log the room; folded again, it comes back. */
+.askfolio__log:not(.is-started) {
+  flex: 1 20 auto;
+  min-height: min(calc(var(--askfolio-log-top) + 45px + 8px), 100%); /* a folded row, a little air */
+  padding-bottom: 8px;
+}
+
+.askfolio__log:not(.is-started):has(> .is-past > .askfolio__past[open]) + .askfolio__empty {
   display: none;
 }
 
@@ -936,7 +971,7 @@ html:has(.askfolio:modal) {
   background: rgba(246, 185, 79, .06);
 }
 
-.askfolio__log > * + .is-visitor {
+:is(.askfolio__log, .askfolio__past-log) > * + .is-visitor {
   margin-top: 30px;
 }
 
@@ -982,25 +1017,122 @@ html:has(.askfolio:modal) {
   background: var(--haze);
 }
 
-/* A new topic: a rule across the log, marked by the tuning scale's needle, and the new topic. */
-.askfolio__log .is-divider {
-  margin-top: 30px;
-  padding: 12px 0 0;
-  border-top: 1px solid var(--askfolio-line);
-}
-
-.askfolio__log .is-divider::before {
-  left: 0;
-  top: -9px;
-  width: 2px;
-  height: 9px;
-  border-radius: 1px;
-  background: var(--lamp);
-  box-shadow: 0 0 6px rgba(246, 185, 79, .7);
-}
-
-.askfolio__log > :first-child {
+:is(.askfolio__log, .askfolio__past-log) > :first-child {
   margin-top: 0;
+}
+
+/* ---------- A past conversation, folded ----------
+   One quiet row of the log, ruled under like a closed page of the logbook: a lamp chevron in the
+   waypoints' column (it can be opened), what it was about, and its number of questions at the far
+   end. Unfolded, it hangs its messages on a hairline from the chevron, in dimmer light: history
+   to re-read, under the row that folds it again. Consecutive past conversations stack as rows. The
+   row is the separation from the conversation under it: nothing else marks a new one. */
+
+.askfolio__log > .is-past {
+  border-bottom: 1px solid var(--askfolio-line);
+}
+
+.askfolio__past > summary {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 14px;
+  min-height: 44px;
+  margin-inline: calc(-1 * var(--askfolio-bleed, 0px));
+  padding: 11px calc(2px + var(--askfolio-bleed, 0px)) 10px calc(24px + var(--askfolio-bleed, 0px));
+  font: 400 .9375rem/1.4 var(--sans);
+  letter-spacing: .01em;
+  color: var(--moon-dim);
+  border-radius: 4px;
+  cursor: pointer;
+  list-style: none;
+  transition: color .2s;
+}
+
+.askfolio__past > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The chevron: the sources' own, a size up, at the waypoint's place. */
+.askfolio__past > summary::before {
+  content: '';
+  position: absolute;
+  left: calc(1px + var(--askfolio-bleed, 0px));
+  top: calc(11px + .7em - 5px);
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--lamp);
+  border-bottom: 1.5px solid var(--lamp);
+  transform: rotate(-45deg);
+  transition: transform .2s;
+}
+
+.askfolio__past[open] > summary::before {
+  top: calc(11px + .7em - 7px);
+  transform: rotate(45deg);
+}
+
+.askfolio__past > summary:hover {
+  color: var(--lamp-soft);
+}
+
+/* The focus ring inside the row, which the log's edges would clip once it reaches across them. */
+.askfolio__past > summary:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Unfolded, the row stays at the top of the log while its messages scroll under it, so that it can
+   be folded again from anywhere in them. Stuck, it rests on the log's top edge, over its top
+   padding, where nothing shows above it; its background reaches across the log's side padding.
+   Not stuck, it paints nothing outside its own box. */
+.askfolio__past[open] > summary {
+  --askfolio-bleed: 20px;
+  position: sticky;
+  top: calc(-1 * var(--askfolio-log-top, 0px));
+  z-index: 1;
+  background: linear-gradient(#0c1b48 80%, rgba(12, 27, 72, 0)); /* the panel's tone at the log's top */
+}
+
+.askfolio__past-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* At the row's far end; alone on a line of its own when the row wraps (a phone), at its start. */
+.askfolio__past-count {
+  font-size: .875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Unfolded: the messages as they were, in dimmer light (still well above AA on the panel). */
+.askfolio__past-log {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 0 5px;
+  padding: 8px 0 22px 19px;
+  border-left: 1px solid var(--askfolio-line);
+}
+
+.askfolio__past-log .is-visitor {
+  color: var(--moon);
+  border-color: rgba(246, 185, 79, .3);
+  background: rgba(246, 185, 79, .03);
+}
+
+.askfolio__past-log .is-assistant {
+  color: var(--moon-dim);
+}
+
+.askfolio__past-log .is-assistant::before {
+  border-color: var(--moon-dim);
+  background: radial-gradient(circle, var(--moon-dim) 0 1.6px, transparent 2px);
+}
+
+.askfolio__past-log .is-assistant :is(strong, a, h3, h4, h5, h6, code) {
+  color: var(--moon);
 }
 
 /* ---------- The answers' Markdown (renderMarkdown output carries no class) ---------- */
@@ -2186,9 +2318,13 @@ html:has(.askfolio:modal) {
   }
 
   /* Here the whole area under the header scrolls: the empty conversation keeps its full height
-     instead of scrolling in a slot of its own. */
-  .askfolio__body:has(> .askfolio__log:empty) {
+     instead of scrolling in a slot of its own, under the folded past ones at theirs. */
+  .askfolio__body:has(> .askfolio__log:not(.is-started)) {
     min-height: auto;
+  }
+
+  .askfolio__log:not(.is-started) {
+    flex: none;
   }
 
   .askfolio__empty {
@@ -2201,7 +2337,7 @@ html:has(.askfolio:modal) {
   }
 
   .askfolio__log {
-    padding-top: 14px;
+    --askfolio-log-top: 14px;
   }
 
   .askfolio__empty {
@@ -2328,6 +2464,10 @@ html:has(.askfolio:modal) {
 
   .askfolio__select {
     border: 1px solid ButtonText;
+  }
+
+  .askfolio__past[open] > summary {
+    background: Canvas;
   }
 }
 
